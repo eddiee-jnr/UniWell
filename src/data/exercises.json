@@ -1,0 +1,62 @@
+[
+  {
+    "id": "1",
+    "title": "Box Breathing",
+    "description": "A powerful technique to calm the nervous system and improve focus during intense study blocks.",
+    "duration": "4 mins",
+    "category": "Focus",
+    "icon": "wind",
+    "iconLib": "Feather",
+    "tip": "Follow the expanding circle. Inhale as it grows, hold at the top, exhale as it shrinks."
+  },
+  {
+    "id": "2",
+    "title": "Neck & Shoulder Release",
+    "description": "Release the tension built up from hours of leaning over a laptop or desk.",
+    "duration": "3 mins",
+    "category": "Quick",
+    "icon": "body-outline",
+    "iconLib": "Ionicons",
+    "tip": "Slowly drop your chin to your chest. Roll your head from side to side, feeling the stretch in your traps."
+  },
+  {
+    "id": "3",
+    "title": "Deep Relaxation",
+    "description": "A guided body scan to help you disconnect and recharge your mental energy.",
+    "duration": "10 mins",
+    "category": "Relax",
+    "icon": "moon-outline",
+    "iconLib": "Ionicons",
+    "tip": "Close your eyes. Start from your toes and move upward, consciously relaxing every muscle group."
+  },
+  {
+    "id": "4",
+    "title": "5-4-3-2-1 Grounding",
+    "description": "Quickly reduce anxiety by engaging your five senses with your immediate environment.",
+    "duration": "2 mins",
+    "category": "Quick",
+    "icon": "earth",
+    "iconLib": "Ionicons",
+    "tip": "Acknowledge: 5 things you see, 4 you can touch, 3 you hear, 2 you smell, and 1 you can taste."
+  },
+  {
+    "id": "5",
+    "title": "Eye Rest (20-20-20)",
+    "description": "Reduce digital eye strain by looking at something 20 feet away for 20 seconds.",
+    "duration": "1 min",
+    "category": "Quick",
+    "icon": "eye-outline",
+    "iconLib": "Ionicons",
+    "tip": "Look away from the screen. Focus on an object at least 20 feet away to relax your eye muscles."
+  },
+  {
+    "id": "6",
+    "title": "Guided Gratitude",
+    "description": "Shift your mindset by reflecting on three specific things you are grateful for today.",
+    "duration": "5 mins",
+    "category": "Relax",
+    "icon": "heart-outline",
+    "iconLib": "Ionicons",
+    "tip": "Think of one small win from today, one person you appreciate, and one thing you're looking forward to."
+  }
+]

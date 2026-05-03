@@ -1,0 +1,1 @@
+// Resources Screen placeholder

@@ -1,0 +1,92 @@
+[
+  {
+    "id": "tip_001",
+    "category": "academic",
+    "title": "Use the Pomodoro Technique",
+    "body": "Study for 25 minutes, then take a 5-minute break. After four cycles, take a longer 15–30 minute break. This method prevents burnout and keeps your focus sharp during long study sessions."
+  },
+  {
+    "id": "tip_002",
+    "category": "academic",
+    "title": "Review Lecture Notes Within 24 Hours",
+    "body": "Research shows that revisiting notes within 24 hours of a lecture dramatically improves long-term retention. Even a 10-minute review before bed can make a significant difference during exams."
+  },
+  {
+    "id": "tip_003",
+    "category": "academic",
+    "title": "Create a Dedicated Study Space",
+    "body": "Your brain associates environments with activities. Having a consistent, clutter-free study space signals to your mind that it's time to focus. Avoid studying in bed — it blurs the line between rest and work."
+  },
+  {
+    "id": "tip_004",
+    "category": "academic",
+    "title": "Practice Active Recall",
+    "body": "Instead of passively re-reading notes, close the book and write down everything you remember. This retrieval practice is one of the most effective study techniques proven by cognitive science."
+  },
+  {
+    "id": "tip_005",
+    "category": "academic",
+    "title": "Plan Your Week Every Sunday",
+    "body": "Spend 15 minutes each Sunday mapping out your deadlines, lectures, and personal goals for the week ahead. A clear plan reduces anxiety and helps you stay ahead of last-minute stress."
+  },
+  {
+    "id": "tip_006",
+    "category": "sleep",
+    "title": "Keep a Consistent Sleep Schedule",
+    "body": "Going to bed and waking up at the same time each day — even on weekends — helps regulate your internal clock. Consistency is more important than duration for the quality of your sleep."
+  },
+  {
+    "id": "tip_007",
+    "category": "sleep",
+    "title": "Avoid Screens 1 Hour Before Bed",
+    "body": "The blue light emitted by phones and laptops suppresses melatonin production, making it harder to fall asleep. Try switching to a book, light stretching, or calming music in your final hour before bed."
+  },
+  {
+    "id": "tip_008",
+    "category": "sleep",
+    "title": "Cool Your Room Down",
+    "body": "Your body temperature naturally drops as you fall asleep. A cool room between 16–19°C (60–67°F) signals to your body that it's time to sleep and significantly improves sleep depth."
+  },
+  {
+    "id": "tip_009",
+    "category": "sleep",
+    "title": "Try a 'Brain Dump' Before Bed",
+    "body": "If racing thoughts keep you awake, spend five minutes writing down everything on your mind in a notebook. This offloads mental clutter and gives your brain permission to rest."
+  },
+  {
+    "id": "tip_010",
+    "category": "sleep",
+    "title": "Limit Caffeine After 2 PM",
+    "body": "Caffeine has a half-life of about 5–6 hours, meaning a 3 PM coffee still has half its potency at 9 PM. Cutting off caffeine in the early afternoon is one of the fastest wins for better sleep."
+  },
+  {
+    "id": "tip_011",
+    "category": "social",
+    "title": "Schedule Social Time Like a Class",
+    "body": "When life gets busy, social connection is often the first thing dropped. Block time in your calendar for friends the same way you would for a lecture — your mental health depends on it."
+  },
+  {
+    "id": "tip_012",
+    "category": "social",
+    "title": "Join One Club or Society",
+    "body": "Research consistently shows that belonging to at least one campus community dramatically reduces feelings of loneliness and isolation. It doesn't have to be a big commitment — even attending once a month makes a difference."
+  },
+  {
+    "id": "tip_013",
+    "category": "social",
+    "title": "Practice Being Fully Present",
+    "body": "When spending time with friends, put your phone away. Studies show that just having a phone visible on the table reduces the quality of conversation and feelings of connection."
+  },
+  {
+    "id": "tip_014",
+    "category": "social",
+    "title": "Reach Out First",
+    "body": "Waiting for others to reach out can lead to prolonged isolation. A simple 'Hey, how are you doing?' text takes seconds and can be the start of a meaningful reconnection. Most people appreciate it more than you'd expect."
+  },
+  {
+    "id": "tip_015",
+    "category": "social",
+    "title": "Be Kind to Yourself in Social Situations",
+    "body": "Social anxiety is extremely common among university students. If you feel awkward or out of place, remember that most people are focused on themselves, not judging you. Embrace imperfection — it makes you more relatable."
+  }
+]
