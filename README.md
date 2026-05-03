@@ -1,8 +1,11 @@
 # 🧘 UniWell - Premium Student Wellness Sanctuary
 
+> [!NOTE]
+> **Academic Project Disclaimer**: This application was developed as part of a **Final Year Project**. It is intended for academic and demonstration purposes and is not a commercial product.
+
 **UniWell** is a state-of-the-art student wellness application designed to support university students through the high-pressure academic cycle. Built with a "Liquid Glass" aesthetic inspired by iOS 26, it provides a serene, high-performance environment for mood tracking, stress management, and academic planning.
 
-![UniWell Logo](https://raw.githubusercontent.com/username/repo/main/assets/logo.png)
+![UniWell Logo](https://raw.githubusercontent.com/eddiee-jnr/UniWell/main/assets/logo.png)
 
 ## ✨ Features
 
@@ -48,8 +51,8 @@ A revolutionary floating pill-shaped navigation bar with:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/uniwell-mobile.git
-   cd uniwell-mobile
+   git clone https://github.com/eddiee-jnr/UniWell.git
+   cd UniWell
    ```
 
 2. **Install dependencies:**
