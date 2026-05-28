@@ -18,6 +18,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 export const TipCard: React.FC<TipCardProps> = ({ tip, onMarkRead, isRead }) => {
+  const [expanded, setExpanded] = useState(false);
   const [marking, setMarking] = useState(false);
   const { session, isGuest } = useAuthStore();
   const cat = CATEGORY_COLORS[tip.category] ?? { bg: '#6B7A9922', text: '#6B7A99' };
@@ -47,50 +48,62 @@ export const TipCard: React.FC<TipCardProps> = ({ tip, onMarkRead, isRead }) => 
       borderWidth: 1, borderColor: isRead ? '#7C6FEB40' : '#1F2D45',
       marginBottom: 14,
     }}>
-      {/* Category badge + read indicator */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <View style={{
-          backgroundColor: cat.bg, borderRadius: 8,
-          paddingHorizontal: 10, paddingVertical: 4,
-        }}>
-          <Text style={{ color: cat.text, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            {tip.category}
-          </Text>
-        </View>
-        {isRead && (
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="checkmark-circle" size={16} color="#4ADE80" style={{ marginRight: 4 }} />
-            <Text style={{ color: '#4ADE80', fontSize: 11, fontWeight: '600' }}>Read</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Title */}
-      <Text style={{ color: '#F0F4FF', fontSize: 16, fontWeight: '800', marginBottom: 10, lineHeight: 22 }}>
-        {tip.title}
-      </Text>
-
-      {/* Body */}
-      <Text style={{ color: '#8899AA', fontSize: 13, lineHeight: 21, marginBottom: 18 }}>
-        {tip.body}
-      </Text>
-
-      {/* Mark as Read button */}
-      <TouchableOpacity
-        onPress={handleMarkRead}
-        disabled={isRead || marking}
-        style={{
-          borderRadius: 12, paddingVertical: 13, alignItems: 'center',
-          backgroundColor: isRead ? '#4ADE8015' : '#7C6FEB',
-          borderWidth: isRead ? 1 : 0,
-          borderColor: '#4ADE8040',
-          opacity: marking ? 0.6 : 1,
-        }}
+      <TouchableOpacity 
+        onPress={() => setExpanded(!expanded)}
+        activeOpacity={0.7}
       >
-        <Text style={{ color: isRead ? '#4ADE80' : '#fff', fontWeight: '700', fontSize: 14 }}>
-          {isRead ? '✓ Marked as Read' : marking ? 'Saving...' : 'Mark as Read'}
+        {/* Category badge + read indicator */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <View style={{
+            backgroundColor: cat.bg, borderRadius: 8,
+            paddingHorizontal: 10, paddingVertical: 4,
+          }}>
+            <Text style={{ color: cat.text, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {tip.category}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {isRead && (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="checkmark-circle" size={16} color="#4ADE80" style={{ marginRight: 4 }} />
+                <Text style={{ color: '#4ADE80', fontSize: 11, fontWeight: '600' }}>Read</Text>
+              </View>
+            )}
+            <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={16} color="#8899AA" />
+          </View>
+        </View>
+
+        {/* Title */}
+        <Text style={{ color: '#F0F4FF', fontSize: 16, fontWeight: '800', marginBottom: expanded ? 10 : 0, lineHeight: 22 }}>
+          {tip.title}
         </Text>
       </TouchableOpacity>
+
+      {expanded && (
+        <View style={{ marginTop: 10 }}>
+          {/* Body */}
+          <Text style={{ color: '#8899AA', fontSize: 13, lineHeight: 21, marginBottom: 18 }}>
+            {tip.body}
+          </Text>
+
+          {/* Done button */}
+          <TouchableOpacity
+            onPress={handleMarkRead}
+            disabled={isRead || marking}
+            style={{
+              borderRadius: 12, paddingVertical: 13, alignItems: 'center',
+              backgroundColor: isRead ? '#4ADE8015' : '#7C6FEB',
+              borderWidth: isRead ? 1 : 0,
+              borderColor: '#4ADE8040',
+              opacity: marking ? 0.6 : 1,
+            }}
+          >
+            <Text style={{ color: isRead ? '#4ADE80' : '#fff', fontWeight: '700', fontSize: 14 }}>
+              {isRead ? '✓ Done' : marking ? 'Saving...' : 'Done'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };

@@ -1,17 +1,17 @@
-import React, { useMemo } from 'react';
-import { View, Text } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { MoodEntry } from '../../types';
+import { useTheme } from '../../hooks/useTheme';
 
 interface StressHeatmapProps {
   entries: MoodEntry[];
 }
 
-import { useTheme } from '../../hooks/useTheme';
+const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
-export const StressHeatmap: React.FC<StressHeatmapProps> = ({ entries }) => {
+export const StressHeatmap: React.FC<StressHeatmapProps> = ({ entries = [] }) => {
   const { colors, theme } = useTheme();
+  const [range, setRange] = useState<'7days' | '30days' | 'all'>('30days'); // Default to 30 days for 4-week heatmap
 
   // Map stress value 1-10 to a color
   const getStressColor = (stress: number | null): string => {
@@ -29,23 +29,40 @@ export const StressHeatmap: React.FC<StressHeatmapProps> = ({ entries }) => {
     { label: 'Peak (8+)',  color: '#F87171' },
   ];
 
-  // Build a 28-day grid (4 weeks)
+  // Build a 28-day grid (4 weeks) aligned with Monday-Sunday columns
   const grid = useMemo(() => {
-    const days: { date: Date; stress: number | null }[] = [];
-    for (let i = 27; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      d.setHours(0, 0, 0, 0);
-      days.push({ date: d, stress: null });
+    const today = new Date();
+    const dayOfWeek = (today.getDay() + 6) % 7; // 0 is Monday, 1 is Tuesday... 6 is Sunday
+    const startMonday = new Date();
+    startMonday.setDate(today.getDate() - dayOfWeek - 21); // Monday of 3 weeks ago
+    startMonday.setHours(0, 0, 0, 0);
+
+    const days: { dateStr: string; stress: number | null }[] = [];
+    for (let i = 0; i < 28; i++) {
+      const d = new Date(startMonday);
+      d.setDate(startMonday.getDate() + i);
+      days.push({ dateStr: d.toDateString(), stress: null });
     }
-    entries.forEach((e) => {
+
+    // Filter entries based on the selected range
+    const filtered = entries.filter((e) => {
+      const entryTime = new Date(e.created_at).getTime();
+      const diffTime = today.getTime() - entryTime;
+      if (range === '7days') {
+        return diffTime <= 7 * 24 * 60 * 60 * 1000;
+      } else if (range === '30days') {
+        return diffTime <= 30 * 24 * 60 * 60 * 1000;
+      }
+      return true; // All Time
+    });
+
+    filtered.forEach((e) => {
       const entryDate = new Date(e.created_at);
-      entryDate.setHours(0, 0, 0, 0);
-      const slot = days.find((d) => d.date.getTime() === entryDate.getTime());
+      const slot = days.find((d) => d.dateStr === entryDate.toDateString());
       if (slot) slot.stress = e.stress;
     });
     return days;
-  }, [entries]);
+  }, [entries, range]);
 
   // Split into rows of 7
   const weeks: typeof grid[] = [];
@@ -53,9 +70,38 @@ export const StressHeatmap: React.FC<StressHeatmapProps> = ({ entries }) => {
     weeks.push(grid.slice(i, i + 7));
   }
 
+  const renderSelector = () => (
+    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginBottom: 12 }}>
+      {(['7days', '30days', 'all'] as const).map((r) => (
+        <TouchableOpacity
+          key={r}
+          onPress={() => setRange(r)}
+          style={{
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 8,
+            backgroundColor: range === r ? colors.primary : colors.surface,
+            borderWidth: 1,
+            borderColor: range === r ? colors.primary : colors.border
+          }}
+        >
+          <Text style={{ 
+            fontSize: 11, 
+            fontWeight: '700', 
+            color: range === r ? '#fff' : colors.muted 
+          }}>
+            {r === '7days' ? '7 Days' : r === '30days' ? '30 Days' : 'All Time'}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
   return (
     <View>
-      {/* Day labels */}
+      {renderSelector()}
+
+      {/* Day letters */}
       <View style={{ flexDirection: 'row', marginBottom: 6 }}>
         {DAY_LETTERS.map((d, i) => (
           <Text key={i} style={{

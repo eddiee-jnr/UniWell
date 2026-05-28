@@ -8,6 +8,8 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import exercisesData from '../../data/exercises.json';
 import { useTheme } from '../../hooks/useTheme';
+import { useWellnessScore } from '../../hooks/useWellnessScore';
+import { useAuthStore } from '../../store/authStore';
 
 const { width } = Dimensions.get('window');
 const CATEGORIES = ['All', 'Quick', 'Focus', 'Relax'];
@@ -18,6 +20,8 @@ export const ExerciseListScreen = () => {
   const { colors, theme } = useTheme();
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const { allExercises } = useWellnessScore();
+  const { isGuest } = useAuthStore();
 
   const filteredExercises = exercisesData.filter(ex => {
     const matchesCategory = activeCategory === 'All' || ex.category === activeCategory;
@@ -104,6 +108,46 @@ export const ExerciseListScreen = () => {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Completed Exercises History Feed */}
+        {!isGuest && (
+          <View style={{ paddingHorizontal: 24, marginTop: 32 }}>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: colors.text, marginBottom: 16 }}>Completed Sessions</Text>
+            {allExercises.length === 0 ? (
+              <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}>
+                <MaterialCommunityIcons name="history" size={32} color={colors.muted} style={{ marginBottom: 8 }} />
+                <Text style={{ color: colors.muted, fontSize: 14, textAlign: 'center' }}>No completed sessions yet. Start your first exercise above!</Text>
+              </View>
+            ) : (
+              allExercises.map((session) => (
+                <View 
+                  key={session.id} 
+                  style={{ 
+                    backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 12, 
+                    borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'
+                  }}
+                >
+                  <View style={{ flex: 1, marginRight: 10 }}>
+                    <Text style={{ color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 4 }}>
+                      {session.exercise_title}
+                    </Text>
+                    <Text style={{ color: colors.muted, fontSize: 12 }}>
+                      {new Date(session.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <View style={[styles.categoryTag, { backgroundColor: colors.background, marginBottom: 4 }]}>
+                      <Text style={[styles.categoryTagText, { color: colors.secondary }]}>{session.category}</Text>
+                    </View>
+                    <Text style={{ color: colors.muted, fontSize: 11, fontWeight: '600' }}>
+                      {Math.round(session.duration_seconds / 60)} min
+                    </Text>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+        )}
       </ScrollView>
     </View>
   );

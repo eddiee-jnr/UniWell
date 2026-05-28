@@ -6,38 +6,162 @@ interface AuthState {
   session: Session | null;
   isGuest: boolean;
   theme: 'dark' | 'light';
-  userProfile: { name: string; bio: string };
+  userProfile: { name: string; preferred_name?: string; bio: string };
+  // ── Rehydration state ──────────────────────────────────────────────────────
+  // isRehydrating is true from the moment setSession fires until all Supabase
+  // data has been written into local SQLite. The dashboard reads this flag to
+  // show a loading screen instead of empty zeros.
+  isRehydrating: boolean;
+  rehydrationError: string | null;
+  // ── Actions ────────────────────────────────────────────────────────────────
   setSession: (session: Session | null) => void;
   setIsGuest: (isGuest: boolean) => void;
   setTheme: (theme: 'dark' | 'light') => void;
-  updateProfile: (profile: { name: string; bio: string }) => void;
+  updateProfile: (profile: { name: string; preferred_name?: string; bio: string }) => void;
   signInAnonymously: () => Promise<void>;
   signOut: () => Promise<void>;
 }
+
+import { clearAllLocalData } from '../services/storage';
 
 export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   isGuest: false,
   theme: 'dark',
-  userProfile: { name: 'Julian Vance', bio: 'Graduate Student • Psychology' },
+  isRehydrating: false,
+  rehydrationError: null,
+  userProfile: { name: 'Guest User', preferred_name: undefined, bio: 'Exploring UniWell' },
+
   setSession: (session) => {
     const profile = session?.user?.user_metadata;
-    set({ 
+
+    // Immediately update the session and user profile in state.
+    set({
       session,
+      isRehydrating: !!session?.user?.id, // only true when a real user is logging in
+      rehydrationError: null,
       userProfile: {
-        name: profile?.full_name || session?.user?.email?.split('@')[0] || 'Julian Vance',
-        bio: profile?.bio || 'Graduate Student • Psychology'
-      }
+        name: profile?.full_name || session?.user?.email?.split('@')[0] || 'Student',
+        preferred_name: profile?.preferred_name,
+        bio: profile?.bio || '',
+      },
     });
+
+    if (session?.user?.id) {
+      const userId = session.user.id;
+
+      // ── Rehydration: Supabase → SQLite ──────────────────────────────────────
+      // This is awaited inside an async IIFE so the store action itself stays
+      // synchronous (Zustand requirement) while the async work is tracked.
+      (async () => {
+        try {
+          const { rehydrateUserData } = await import('../services/syncService');
+          await rehydrateUserData(userId);
+          console.log('[AuthStore] Rehydration complete. Refreshing Zustand stores from SQLite...');
+
+          // Refresh in-memory Zustand store state from the newly written SQLite data.
+          const { useMoodStore } = await import('./moodStore');
+          const { useAcademicStore } = await import('./academicStore');
+          await useMoodStore.getState().loadEntries();
+          await useAcademicStore.getState().loadTasks();
+
+          // Restore read tips from Supabase so the ✓ checkmarks and tips count
+          // are correct immediately after login without waiting for the dashboard
+          // to run its own Supabase count fallback.
+          try {
+            const { supabase: sb } = await import('../services/supabase');
+            const { data: tipRows } = await sb
+              .from('tip_engagements')
+              .select('tip_id')
+              .eq('user_id', userId);
+            if (tipRows && tipRows.length > 0) {
+              const { useTipsStore } = await import('./tipsStore');
+              useTipsStore.getState().setReadTips(tipRows.map((r: any) => r.tip_id));
+              console.log(`[AuthStore] Restored ${tipRows.length} read tip IDs into tipsStore`);
+            }
+          } catch (tipErr) {
+            console.warn('[AuthStore] Could not restore tips from Supabase:', tipErr);
+          }
+
+          set({ isRehydrating: false });
+          console.log('[AuthStore] Stores refreshed. isRehydrating = false.');
+
+          // ── Notification Setup on Login/Rehydration ───────────────────────
+          (async () => {
+            try {
+              const { requestPermissions, scheduleWellnessCheckInReminder, cancelAllNotifications } = await import('../services/notificationService');
+              const granted = await requestPermissions();
+              if (granted) {
+                // Cancel existing to prevent duplicates
+                await cancelAllNotifications();
+                
+                // Get preferred time or fallback to default '20:00'
+                const userMeta = session.user.user_metadata;
+                const dailyPref = userMeta?.notification_pref_daily !== false;
+                if (dailyPref) {
+                  const dailyTime = userMeta?.notification_pref_daily_time || '20:00';
+                  await scheduleWellnessCheckInReminder(dailyTime);
+                  console.log(`[AuthStore] Notification scheduled successfully at ${dailyTime}`);
+                } else {
+                  console.log('[AuthStore] Daily notification is disabled by user preference');
+                }
+              } else {
+                console.log('[AuthStore] Notification permissions not granted');
+              }
+            } catch (notifErr) {
+              console.warn('[AuthStore] Failed to setup notifications:', notifErr);
+            }
+          })();
+        } catch (err: any) {
+          console.error('[AuthStore] Rehydration failed:', err.message);
+          set({ isRehydrating: false, rehydrationError: err.message ?? 'Failed to restore data' });
+        }
+      })();
+
+      // ── Auto-seed GIMPA academic calendar ────────────────────────────────────
+      const isGimpa =
+        profile?.institution === 'gimpa' ||
+        session?.user?.email?.toLowerCase().endsWith('@st.gimpa.edu.gh') ||
+        session?.user?.email?.toLowerCase().endsWith('@gimpa.edu.gh');
+
+      if (isGimpa) {
+        import('../services/storage').then(({ seedAcademicCalendar }) => {
+          seedAcademicCalendar(userId, 'gimpa').catch(console.error);
+        });
+      }
+    }
   },
+
   setIsGuest: (isGuest) => set({ isGuest }),
   setTheme: (theme) => set({ theme }),
   updateProfile: (userProfile) => set({ userProfile }),
+
   signInAnonymously: async () => {
-    set({ isGuest: true });
+    // Guest mode: clear local data so they see a clean slate, then set guest flag.
+    // This does NOT touch Supabase — it only clears the device's local SQLite cache.
+    await clearAllLocalData();
+    set({
+      isGuest: true,
+      isRehydrating: false,
+      rehydrationError: null,
+      userProfile: { name: 'Guest User', bio: 'Exploring UniWell' },
+    });
   },
+
   signOut: async () => {
+    // ── Logout audit ────────────────────────────────────────────────────────
+    // This function ONLY:
+    //   1. Signs out of Supabase Auth (invalidates the JWT token)
+    //   2. Cancels scheduled local notifications for this user session
+    //   3. Clears Zustand in-memory state (session, guest flag)
+    //
+    // It does NOT delete any SQLite table records.
+    // It does NOT clear any Supabase data.
+    // Local data is intentionally preserved so it is available when the user logs back in.
     await supabase.auth.signOut();
-    set({ session: null, isGuest: false });
+    import('../services/notificationService').then(({ cancelAllNotifications }) => {
+      cancelAllNotifications().catch(console.error);
+    });
+    set({ session: null, isGuest: false, isRehydrating: false, rehydrationError: null });
   },
 }));

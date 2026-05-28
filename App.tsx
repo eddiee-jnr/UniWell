@@ -5,9 +5,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState } from 'react-native';
 import { RootNavigator } from './src/navigation/RootNavigator';
-import { initDatabase } from './src/services/storage';
+import { initDatabase, seedAcademicCalendar } from './src/services/storage';
 import { syncPendingEntries } from './src/services/syncService';
 import { registerForPushNotificationsAsync, scheduleWellnessReminder } from './src/services/notificationService';
+import { useAuthStore } from './src/store/authStore';
 
 export default function App() {
   useEffect(() => {
@@ -15,17 +16,16 @@ export default function App() {
       try {
         await initDatabase();
         await syncPendingEntries();
-        /* 
-        const hasPermission = await registerForPushNotificationsAsync();
-        if (hasPermission) {
-          // Schedule a gentle reminder for 1 hour from now (mocking the system nudge)
-          await scheduleWellnessReminder(
-            "UniWell Focus Check 🧠",
-            "You've been studying hard! How about a 2-minute breathing break?",
-            3600
-          );
+
+        const session = useAuthStore.getState().session;
+        const profile = session?.user?.user_metadata;
+        const isGimpa = profile?.institution === 'gimpa' || 
+          session?.user?.email?.toLowerCase().endsWith('@st.gimpa.edu.gh') || 
+          session?.user?.email?.toLowerCase().endsWith('@gimpa.edu.gh');
+        
+        if (session?.user?.id && isGimpa) {
+          await seedAcademicCalendar(session.user.id, 'gimpa');
         }
-        */
       } catch (err) {
         console.error('App Setup Error:', err);
       }

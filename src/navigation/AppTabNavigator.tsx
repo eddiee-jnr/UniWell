@@ -88,14 +88,18 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   );
 };
 
+import { useAuthStore } from '../store/authStore';
+
 export const AppTabNavigator = () => {
+  const { isGuest } = useAuthStore();
+
   return (
     <Tab.Navigator
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
       <Tab.Screen name="Home" component={DashboardScreen} />
-      <Tab.Screen name="Calendar" component={CalendarScreen} />
+      {!isGuest && <Tab.Screen name="Calendar" component={CalendarScreen} />}
       <Tab.Screen name="Track" component={MoodTrackerScreen} />
       <Tab.Screen name="Exercises" component={ExerciseListScreen} />
       <Tab.Screen name="Support" component={ResourceDirectoryScreen} />

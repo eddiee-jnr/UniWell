@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, StyleSheet, Alert } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../hooks/useTheme';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 const stats = [
   { icon: 'meditation', value: '128', label: 'TOTAL SESSIONS', lib: 'MaterialCommunityIcons' },
@@ -21,6 +22,7 @@ const settings = [
 export const ProfileScreen = () => {
   const { signOut, isGuest, userProfile, updateProfile } = useAuthStore();
   const { theme, setTheme, colors } = useTheme();
+  const navigation = useNavigation<any>();
 
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [editedName, setEditedName] = useState(userProfile.name);
@@ -29,6 +31,21 @@ export const ProfileScreen = () => {
   const handleSaveProfile = () => {
     updateProfile({ name: editedName, bio: editedBio });
     setEditModalVisible(false);
+  };
+
+  const handleLogout = () => {
+    if (isGuest) {
+      Alert.alert(
+        'Before you go...',
+        'Anything you\'ve tracked this session won\'t be saved. Create a free account to keep your progress.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Log In / Sign Up', onPress: signOut },
+        ]
+      );
+    } else {
+      signOut();
+    }
   };
 
   return (
@@ -72,7 +89,9 @@ export const ProfileScreen = () => {
           <Text style={{ color: colors.text, fontSize: 22, fontWeight: '800' }}>
             {isGuest ? 'Guest User' : userProfile.name}
           </Text>
-          <Text style={{ color: colors.muted, fontSize: 13, marginTop: 4 }}>{isGuest ? 'Limited Access Mode' : userProfile.bio}</Text>
+          <Text style={{ color: colors.muted, fontSize: 13, marginTop: 4 }}>
+            {isGuest ? 'Limited Access Mode' : (userProfile.bio || 'Add a bio/status to your profile')}
+          </Text>
         </View>
 
         {/* Theme Setting Row */}
@@ -94,11 +113,20 @@ export const ProfileScreen = () => {
         <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
           <Text style={{ color: colors.muted, fontSize: 11, fontWeight: '700', letterSpacing: 2, marginBottom: 14 }}>ACCOUNT SETTINGS</Text>
           {[
-            { icon: 'notifications-outline', label: 'Notifications' },
-            { icon: 'shield-checkmark-outline', label: 'Privacy & Security' },
-            { icon: 'sync-outline', label: 'Data Integration' },
+            { icon: 'document-text-outline', label: 'Wellness Reports', route: 'ReportsList' },
+            { icon: 'notifications-outline', label: 'Notifications', route: 'NotificationsSettings' },
+            { icon: 'shield-checkmark-outline', label: 'Privacy & Security', route: 'PrivacySecurity' },
+            { icon: 'sync-outline', label: 'Data Integration', route: 'DataIntegration' },
           ].map((s) => (
-            <TouchableOpacity key={s.label} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: colors.border }}>
+            <TouchableOpacity 
+              key={s.label} 
+              onPress={() => {
+                if (s.route) {
+                  navigation.navigate(s.route);
+                }
+              }}
+              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: colors.border }}
+            >
               <Ionicons name={s.icon as any} size={20} color={colors.primary} style={{ marginRight: 14 }} />
               <Text style={{ color: colors.text, fontWeight: '600', flex: 1 }}>{s.label}</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.muted} />
@@ -108,7 +136,7 @@ export const ProfileScreen = () => {
 
         {/* Logout */}
         <View style={{ paddingHorizontal: 20 }}>
-          <TouchableOpacity onPress={signOut} style={{ borderRadius: 14, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: '#F8717140', backgroundColor: '#F8717110' }}>
+          <TouchableOpacity onPress={handleLogout} style={{ borderRadius: 14, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: '#F8717140', backgroundColor: '#F8717110' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Ionicons name="log-out-outline" size={20} color="#F87171" style={{ marginRight: 8 }} />
               <Text style={{ color: '#F87171', fontWeight: '700', fontSize: 16 }}>{isGuest ? 'Exit Guest Mode' : 'Logout'}</Text>
@@ -142,7 +170,7 @@ export const ProfileScreen = () => {
               style={{ backgroundColor: colors.background, color: colors.text, borderRadius: 12, padding: 14, marginBottom: 24, borderWidth: 1, borderColor: colors.border }}
               value={editedBio}
               onChangeText={setEditedBio}
-              placeholder="Tell us about yourself"
+              placeholder="e.g. Graduate Student • Psychology"
               placeholderTextColor={colors.muted}
               multiline
             />

@@ -3,6 +3,7 @@ import { MoodEntry } from '../types';
 import { saveMoodLocally, getLocalMoodEntries, deleteLocalEntry } from '../services/storage';
 import { syncPendingEntries } from '../services/syncService';
 import { supabase } from '../services/supabase';
+import { useAuthStore } from './authStore';
 
 interface MoodState {
   entries: MoodEntry[];
@@ -19,7 +20,8 @@ export const useMoodStore = create<MoodState>((set, get) => ({
   loadEntries: async () => {
     set({ loading: true });
     try {
-      const localEntries = await getLocalMoodEntries();
+      const userId = useAuthStore.getState().session?.user.id || 'guest';
+      const localEntries = await getLocalMoodEntries(userId);
       set({ entries: localEntries });
     } catch (error) {
       console.error('Failed to load entries:', error);
@@ -41,8 +43,15 @@ export const useMoodStore = create<MoodState>((set, get) => ({
     // Update UI immediately
     set({ entries: [newEntry, ...get().entries] });
 
-    // Attempt to sync
-    await syncPendingEntries();
+    // Attempt to sync if not a guest
+    const { isGuest } = useAuthStore.getState();
+    if (!isGuest) {
+      try {
+        await syncPendingEntries();
+      } catch (e) {
+        console.error('Sync failed', e);
+      }
+    }
   },
 
   deleteEntry: async (id) => {

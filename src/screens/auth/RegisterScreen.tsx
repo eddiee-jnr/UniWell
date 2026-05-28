@@ -9,6 +9,7 @@ import { supabase } from '../../services/supabase';
 
 export const RegisterScreen = ({ navigation }: any) => {
   const [name, setName] = useState('');
+  const [preferredName, setPreferredName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -16,9 +17,19 @@ export const RegisterScreen = ({ navigation }: any) => {
 
   const handleSignUp = async () => {
     if (!email || !password || !name) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
+    
+    // GIMPA Email Validation
+    if (!email.toLowerCase().endsWith('@st.gimpa.edu.gh')) {
+      Alert.alert(
+        'Invalid Email Domain',
+        'UniWell is currently available for GIMPA students only. Please use your official GIMPA university email (@st.gimpa.edu.gh) to register.'
+      );
+      return;
+    }
+
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
@@ -31,6 +42,8 @@ export const RegisterScreen = ({ navigation }: any) => {
       options: {
         data: {
           full_name: name,
+          preferred_name: preferredName.trim() || name.split(' ')[0], // fallback to first name
+          institution: 'gimpa'
         }
       }
     });
@@ -76,7 +89,7 @@ export const RegisterScreen = ({ navigation }: any) => {
           </Text>
 
           {/* Name */}
-          <Text style={{ color: '#6B7A99', fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 8, textTransform: 'uppercase' }}>Full Name</Text>
+          <Text style={{ color: '#6B7A99', fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 8, textTransform: 'uppercase' }}>Full Name *</Text>
           <View style={{
             borderRadius: 14, borderWidth: 1, borderColor: '#1F2D45',
             backgroundColor: '#111827', marginBottom: 16,
@@ -85,6 +98,21 @@ export const RegisterScreen = ({ navigation }: any) => {
               value={name}
               onChangeText={setName}
               placeholder="Julian Vance"
+              placeholderTextColor="#4D5F7A"
+              style={{ color: '#F0F4FF', paddingHorizontal: 18, paddingVertical: 16, fontSize: 15 }}
+            />
+          </View>
+
+          {/* Preferred Name */}
+          <Text style={{ color: '#6B7A99', fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 8, textTransform: 'uppercase' }}>Preferred Name (Optional)</Text>
+          <View style={{
+            borderRadius: 14, borderWidth: 1, borderColor: '#1F2D45',
+            backgroundColor: '#111827', marginBottom: 16,
+          }}>
+            <TextInput
+              value={preferredName}
+              onChangeText={setPreferredName}
+              placeholder="Jules"
               placeholderTextColor="#4D5F7A"
               style={{ color: '#F0F4FF', paddingHorizontal: 18, paddingVertical: 16, fontSize: 15 }}
             />

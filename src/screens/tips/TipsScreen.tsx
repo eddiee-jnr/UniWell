@@ -9,6 +9,8 @@ import { WellnessTip } from '../../types';
 import { supabase } from '../../services/supabase';
 import localTips from '../../data/tips.json';
 
+import { useTipsStore } from '../../store/tipsStore';
+
 type FilterCategory = 'all' | 'academic' | 'sleep' | 'social';
 
 const FILTERS: { label: string; value: FilterCategory }[] = [
@@ -21,11 +23,17 @@ const FILTERS: { label: string; value: FilterCategory }[] = [
 export const TipsScreen: React.FC = () => {
   const [tips, setTips] = useState<WellnessTip[]>([]);
   const [filter, setFilter] = useState<FilterCategory>('all');
-  const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const readTips = useTipsStore((state) => state.readTips);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const tabBarHeight = useBottomTabBarHeight();
+  
+  let tabBarHeight = 0;
+  try {
+    tabBarHeight = useBottomTabBarHeight();
+  } catch (e) {
+    tabBarHeight = 0;
+  }
 
   const fetchTips = useCallback(async () => {
     try {
@@ -63,7 +71,7 @@ export const TipsScreen: React.FC = () => {
   };
 
   const handleMarkRead = (id: string) => {
-    setReadIds((prev) => new Set([...prev, id]));
+    useTipsStore.getState().markAsRead(id);
   };
 
   const filteredTips =
@@ -83,7 +91,7 @@ export const TipsScreen: React.FC = () => {
       style={{ flex: 1, backgroundColor: '#0A0F1E' }}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: tabBarHeight + 40 }}
-      refreshControl={
+      refreshControl = {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C6FEB" />
       }
     >
@@ -140,7 +148,7 @@ export const TipsScreen: React.FC = () => {
       <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
         <Text style={{ color: '#4D5F7A', fontSize: 12 }}>
           {filteredTips.length} tip{filteredTips.length !== 1 ? 's' : ''} •{' '}
-          {readIds.size} read
+          {readTips.length} read
         </Text>
       </View>
 
@@ -159,7 +167,7 @@ export const TipsScreen: React.FC = () => {
             <TipCard
               key={tip.id}
               tip={tip}
-              isRead={readIds.has(tip.id)}
+              isRead={readTips.includes(tip.id)}
               onMarkRead={handleMarkRead}
             />
           ))

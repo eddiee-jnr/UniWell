@@ -1,0 +1,242 @@
+[
+  {
+    "id": "gimpa_sem2_commencement_2026",
+    "title": "Semester Commencement",
+    "date": "2026-02-02",
+    "endDate": "2026-02-02",
+    "type": "event",
+    "description": "Second Semester of the 2025/2026 Academic Year officially begins.",
+    "institution": "gimpa",
+    "priority": "high"
+  },
+  {
+    "id": "gimpa_undergrad_reg_2026",
+    "title": "Undergraduate Registration with 60% Fee Payment",
+    "date": "2026-02-02",
+    "endDate": "2026-04-21",
+    "type": "registration",
+    "description": "Undergraduate students must register with a minimum of 60% fee payment during this window.",
+    "institution": "gimpa",
+    "priority": "high"
+  },
+  {
+    "id": "gimpa_grad_reg_2026",
+    "title": "Graduate Registration with 100% Fee Payment",
+    "date": "2026-02-02",
+    "endDate": "2026-04-21",
+    "type": "registration",
+    "description": "Graduate students must register with full 100% fee payment during this window.",
+    "institution": "gimpa",
+    "priority": "high"
+  },
+  {
+    "id": "gimpa_late_reg_penalty_2026",
+    "title": "Late Registration Penalty Begins",
+    "date": "2026-04-21",
+    "endDate": "2026-04-21",
+    "type": "deadline",
+    "description": "Late registration after this date attracts a penalty of GH¢500 per week.",
+    "institution": "gimpa",
+    "priority": "high"
+  },
+  {
+    "id": "gimpa_mid_sem_exams_2026",
+    "title": "Mid-Semester Examinations",
+    "date": "2026-03-23",
+    "endDate": "2026-03-29",
+    "type": "exam",
+    "description": "Mid-semester examinations for all students.",
+    "institution": "gimpa",
+    "priority": "high"
+  },
+  {
+    "id": "gimpa_revision_period_2026",
+    "title": "Revision Period",
+    "date": "2026-05-04",
+    "endDate": "2026-05-10",
+    "type": "event",
+    "description": "Revision week before end of semester examinations. Use this time wisely.",
+    "institution": "gimpa",
+    "priority": "medium"
+  },
+  {
+    "id": "gimpa_all_fees_deadline_2026",
+    "title": "All Fees Final Deadline",
+    "date": "2026-05-05",
+    "endDate": "2026-05-05",
+    "type": "deadline",
+    "description": "All outstanding fees must be fully paid by this date.",
+    "institution": "gimpa",
+    "priority": "high"
+  },
+  {
+    "id": "gimpa_reg_period_ends_2026",
+    "title": "Registration Period Ends",
+    "date": "2026-05-05",
+    "endDate": "2026-05-05",
+    "type": "deadline",
+    "description": "Final deadline for student registration. Late registration window closes.",
+    "institution": "gimpa",
+    "priority": "high"
+  },
+  {
+    "id": "gimpa_end_sem_exams_2026",
+    "title": "End of Semester Examinations",
+    "date": "2026-05-11",
+    "endDate": "2026-05-24",
+    "type": "exam",
+    "description": "End of semester examinations for all students.",
+    "institution": "gimpa",
+    "priority": "high"
+  },
+  {
+    "id": "gh_holiday_new_year_2026",
+    "title": "New Year's Day",
+    "date": "2026-01-01",
+    "endDate": "2026-01-01",
+    "type": "holiday",
+    "description": "Public holiday celebrating the start of the new year.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_constitution_2026",
+    "title": "Constitution Day",
+    "date": "2026-01-07",
+    "endDate": "2026-01-07",
+    "type": "holiday",
+    "description": "Public holiday marking the adoption of the 1992 Fourth Republic Constitution.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_independence_2026",
+    "title": "Independence Day",
+    "date": "2026-03-06",
+    "endDate": "2026-03-06",
+    "type": "holiday",
+    "description": "Public holiday marking Ghana's independence from British colonial rule.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_eid_fitr_2026",
+    "title": "Eid al-Fitr",
+    "date": "2026-03-20",
+    "endDate": "2026-03-20",
+    "type": "holiday",
+    "description": "Public holiday marking the end of Ramadan.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_good_friday_2026",
+    "title": "Good Friday",
+    "date": "2026-04-03",
+    "endDate": "2026-04-03",
+    "type": "holiday",
+    "description": "Christian public holiday commemorating the crucifixion of Jesus Christ.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_holy_saturday_2026",
+    "title": "Holy Saturday",
+    "date": "2026-04-04",
+    "endDate": "2026-04-04",
+    "type": "holiday",
+    "description": "Public holiday.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_easter_monday_2026",
+    "title": "Easter Monday",
+    "date": "2026-04-06",
+    "endDate": "2026-04-06",
+    "type": "holiday",
+    "description": "Christian public holiday celebrating the resurrection of Jesus Christ.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_may_day_2026",
+    "title": "May Day / Labour Day",
+    "date": "2026-05-01",
+    "endDate": "2026-05-01",
+    "type": "holiday",
+    "description": "National holiday dedicated to celebrating workers.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_africa_unity_2026",
+    "title": "Africa Unity Day",
+    "date": "2026-05-25",
+    "endDate": "2026-05-25",
+    "type": "holiday",
+    "description": "Holiday celebrating the founding of the Organisation of African Unity.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_eid_adha_2026",
+    "title": "Eid al-Adha",
+    "date": "2026-05-27",
+    "endDate": "2026-05-27",
+    "type": "holiday",
+    "description": "Islamic holiday commemorating Ibrahim's willingness to sacrifice his son.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_founders_2026",
+    "title": "Founders Day",
+    "date": "2026-08-04",
+    "endDate": "2026-08-04",
+    "type": "holiday",
+    "description": "Public holiday celebrating the founders of Ghana.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_nkrumah_memorial_2026",
+    "title": "Kwame Nkrumah Memorial Day",
+    "date": "2026-09-21",
+    "endDate": "2026-09-21",
+    "type": "holiday",
+    "description": "Public holiday marking the birthday of Dr. Kwame Nkrumah, Ghana's first President.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_farmers_day_2026",
+    "title": "Farmer's Day",
+    "date": "2026-12-04",
+    "endDate": "2026-12-04",
+    "type": "holiday",
+    "description": "National holiday honoring farmers and fishers for their contributions.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_christmas_2026",
+    "title": "Christmas Day",
+    "date": "2026-12-25",
+    "endDate": "2026-12-25",
+    "type": "holiday",
+    "description": "Christian holiday celebrating the birth of Jesus Christ.",
+    "institution": "gimpa",
+    "priority": "low"
+  },
+  {
+    "id": "gh_holiday_boxing_day_2026",
+    "title": "Boxing Day",
+    "date": "2026-12-26",
+    "endDate": "2026-12-26",
+    "type": "holiday",
+    "description": "Holiday celebrating the day after Christmas.",
+    "institution": "gimpa",
+    "priority": "low"
+  }
+]

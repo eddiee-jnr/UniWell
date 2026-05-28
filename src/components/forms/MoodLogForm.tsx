@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Alert, ToastAndroid, Platform } from 'react-native';
 import { useMoodStore } from '../../store/moodStore';
 import { useAuthStore } from '../../store/authStore';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -25,14 +25,25 @@ export const MoodLogForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const handleSave = async () => {
     if (mood === null) return;
     
-    await addMoodEntry({
-      user_id: session?.user.id || '',
-      mood: mood as any,
-      stress,
-      note,
-    });
-    
-    onSuccess();
+    try {
+      await addMoodEntry({
+        user_id: session?.user?.id || 'guest',
+        mood: mood as any,
+        stress,
+        note,
+      });
+      
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Logged! Come back tomorrow to keep the momentum going.', ToastAndroid.LONG);
+      } else {
+        Alert.alert('Logged! ✨', 'Come back tomorrow to keep the momentum going.', [{ text: 'OK' }]);
+      }
+      
+      onSuccess();
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'Could not save check-in.');
+    }
   };
 
   return (
