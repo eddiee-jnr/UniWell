@@ -87,59 +87,117 @@ Located under the Profile screen, this provides total transparency:
 
 ---
 
-## 🗄 Database Model & Schema Specifications
+## 🔒 Institutional GIMPA Integration & Security
 
-UniWell utilizes local SQLite caching (`wellness.db`) synced asynchronously with Supabase.
+To maintain academic and institutional credibility, UniWell implements strict registration controls and pre-loaded student support systems:
 
-### 1. Mood Logs (`mood_logs` table)
-* `id` (TEXT PRIMARY KEY) - Random unique string.
-* `user_id` (TEXT) - Owner user ID or `'guest'`.
-* `mood` (INTEGER) - Mood score (1 to 5).
-* `stress` (INTEGER) - Stress level (1 to 10).
-* `note` (TEXT) - Optional personal check-in note.
-* `created_at` (TEXT) - ISO timestamp.
-* `synced` (INTEGER) - `0` for unsynced, `1` for synced.
+### 1. GIMPA Email Domain Verification
+* **Closed Registration Loop**: Registration is restricted exclusively to students using their official university email addresses. The signup page runs a strict domain check on the input string:
+  ```typescript
+  if (!email.toLowerCase().endsWith('@st.gimpa.edu.gh')) {
+    // Blocks registration and displays institutional warning alert
+  }
+  ```
+* **Milestone Calendar Seeding**: If the authenticated user belongs to GIMPA (validated through a `@st.gimpa.edu.gh` or `@gimpa.edu.gh` suffix), the system triggers an automatic calendar seeder. It pre-populates local SQLite with key academic milestones (commencement dates, undergraduate registration periods, mid-sem exams, late registration penalty deadlines, revision periods, and end-of-semester final examinations) to keep students organized.
 
-### 2. Completed Exercises (`completed_exercises` table)
-* `id` (TEXT PRIMARY KEY)
-* `user_id` (TEXT)
-* `exercise_id` (TEXT) - Matching ID from exercises database.
-* `exercise_title` (TEXT)
-* `category` (TEXT)
-* `duration_seconds` (INTEGER)
-* `completed_at` (TEXT)
-* `synced` (INTEGER)
+### 2. Ghana Public Holidays
+The pre-seeded academic database automatically integrates and displays official **Ghana Public Holidays** for the 2026 cycle. These dates appear with a distinct green (`#10B981`) legend identifier on the calendar and include descriptions explaining their historical context:
 
-### 3. Academic Tasks (`academic_tasks` table)
-* `id` (TEXT PRIMARY KEY)
-* `user_id` (TEXT)
-* `title` (TEXT)
-* `sub` (TEXT) - Optional task description.
-* `tag` (TEXT) - `'ACADEMIC'` or `'PRIORITY'`.
-* `date` (TEXT) - Task date (YYYY-MM-DD).
-* `done` (INTEGER) - `1` if completed, `0` if active.
-* `priority` (INTEGER)
-* `synced` (INTEGER)
-* `alert_trigger` (TEXT) - `'none'`, `'1h'`, `'2h'`, `'1d'`, `'2d'`, `'7d'`.
-* `notification_id` (TEXT) - OS scheduled notification ID.
+| Holiday | Date | Description |
+| :--- | :--- | :--- |
+| **New Year's Day** | January 1, 2026 | National public holiday celebrating the start of the year. |
+| **Constitution Day** | January 7, 2026 | Marks the adoption of the 1992 Fourth Republic Constitution. |
+| **Independence Day** | March 6, 2026 | Commemorates Ghana's independence from British colonial rule. |
+| **Eid al-Fitr** | March 20, 2026 | Islamic public holiday marking the end of Ramadan. |
+| **Good Friday** | April 3, 2026 | Christian holiday commemorating the crucifixion of Jesus Christ. |
+| **Holy Saturday** | April 4, 2026 | Commemorates the day Jesus lay in the tomb. |
+| **Easter Monday** | April 6, 2026 | Christian holiday celebrating the resurrection of Jesus. |
+| **May Day** | May 1, 2026 | National holiday celebrating worker achievements and labor rights. |
+| **Africa Unity Day** | May 25, 2026 | Celebrates the founding of the Organisation of African Unity. |
+| **Eid al-Adha** | May 27, 2026 | Islamic holiday honoring Abraham's willingness to sacrifice his son. |
+| **Founders' Day** | August 4, 2026 | Honors the pioneers who led Ghana to independence. |
+| **Kwame Nkrumah Memorial** | September 21, 2026 | Birthday of Dr. Kwame Nkrumah, Ghana's first President. |
+| **Farmers' Day** | December 4, 2026 | Honors agricultural workers for their vital economic contributions. |
+| **Christmas Day** | December 25, 2026 | Celebrates the birth of Jesus Christ. |
+| **Boxing Day** | December 26, 2026 | Holiday celebrated the day after Christmas. |
 
-### 4. Dimension Ratings (`dimension_ratings` table)
-* `id` (TEXT PRIMARY KEY)
-* `user_id` (TEXT)
-* `physical`, `emotional`, `social`, `intellectual`, `occupational`, `spiritual`, `environmental`, `financial` (INTEGER) - Dimension scores (0 to 100).
-* `created_at` (TEXT)
-* `synced` (INTEGER)
+---
 
-### 5. Reports (`reports` table)
-* `id` (TEXT PRIMARY KEY)
-* `user_id` (TEXT)
-* `type` (TEXT) - `'weekly'`, `'monthly'`, or `'yearly'`.
-* `date_label` (TEXT)
-* `overall_score` (INTEGER)
-* `summary` (TEXT)
-* `content_json` (TEXT) - Detailed averages for that period.
-* `created_at` (TEXT)
-* `synced` (INTEGER)
+## 👥 Guest Mode (Limited Access Mode)
+
+UniWell offers a fully-functional, offline-first **Guest Mode** for immediate onboarding without registration. Guest Mode restricts specific features to encourage full signup while maintaining a premium experience:
+
+* **Session Cache Wipes**: Entering Guest Mode executes `clearAllLocalData()`, erasing any cached `mood_logs`, `completed_exercises`, and `academic_tasks` to ensure a completely clean slate.
+* **Exit Warning**: Since guest data is not backed up to Supabase, logging out or exiting guest mode displays a warning Alert: *"Anything you've tracked this session won't be saved. Create a free account to keep your progress."*
+* **Removed Calendar Tab**: The "Calendar" tab is completely removed from the bottom tab bar.
+* **Stat Card Replacement**: The "DAY STREAK" card is hidden on the Dashboard screen, leaving only "EXERCISES" and "READ TIPS" visible.
+* **Simplified Exercises**: The completed sessions history feed is hidden on the Exercise library screen.
+* **Coming Soon Chatbot FAB**: A floating action button with a robot icon appears on the Dashboard screen for guests. Tapping it shows a notice about the upcoming AI wellness companion.
+
+---
+
+## 📊 Monthly & Yearly Reports & Detail Layouts
+
+Beyond the weekly archives, UniWell compiles long-term reports to track trends over semesters:
+
+* **Access Path**: Users navigate to these reports on the Profile page under the **Wellness Reports** section.
+* **Tabbed Interface**: A structured tab header enables immediate switching between **Weekly**, **Monthly**, and **Yearly** generated reports.
+* **Lock State Alert**: If accessed in Guest Mode, a signup block page explains that an account is required to generate long-term analytics.
+* **Report Details Layout**: Tapping any report opens a full dashboard report detail page:
+  * **Radar Chart Snapshot**: Renders a dynamic radar chart evaluating balance across the 8 dimensions specifically calculated for that period.
+  * **Core Metrics Summary**: Displays calculated average mood, stress level, strongest dimension, and target focus area.
+  * **Written Analysis**: A plain-language summary of the user's mental workload.
+  * **Dynamic Recommendations**: Custom advice based on stress averages and lowest-scoring dimensions (e.g., suggesting breathing exercises or contacting campus support).
+
+---
+
+## 📝 Plain Language Interpretations (Track & Report)
+
+To make health data actionable, UniWell translates raw numbers into textual interpretations:
+
+### 1. Overall Wellness Score
+* **High (>= 66%)**: *"Overall you are in a strong wellness position right now. Keep building on what is working."*
+* **Moderate (41-65%)**: *"Your overall wellness is moderate. There are clear areas of strength and a few that need attention — your full report below will show you where to focus."*
+* **Low (<= 40%)**: *"Your overall wellness score is low this period. Please do not ignore this. Small consistent actions can shift this significantly — and support is available on your Support page."*
+
+### 2. Mood Average
+* **High (>= 4)**: *"Your mood has been mostly positive this week. You appear to be managing your emotional load well."*
+* **Moderate (2-3)**: *"Your mood has been variable this week. Some days were harder than others — this is completely normal under academic pressure."*
+* **Low (< 2)**: *"Your mood has been consistently low this week. This is worth paying attention to. We strongly encourage you to visit the campus support directory or speak to someone you trust."*
+
+### 3. Stress Average
+* **High (>= 7)**: *"Your stress peaked recently. This may have coincided with academic deadlines or exams. Recognising your stress patterns helps you prepare better next time."*
+* **Low (< 7)**: *"Your stress has been well-managed recently. Keep maintaining the habits that are working for you."*
+
+### 4. Swarbrick's 8 Dimensions of Wellness
+Each dimension displays its description and translates its calculated score (Low <= 40%, Moderate 41-65%, High >= 66%) into targeted advice:
+
+* **Physical**: Recognising the need for and engaging in physical activity, eating nourishing foods, and getting adequate sleep.
+  * *Low*: *"Your physical wellness is lower than ideal. Try adding one short walk or stretch to your daily routine this week."*
+  * *Moderate*: *"You are about halfway on your physical wellness. Try completing one physical exercise this week."*
+  * *High*: *"Your physical wellness is strong. You are maintaining excellent foundational habits which support your academic resilience."*
+* **Emotional**: Developing skills and strategies to cope with stress, and expressing feelings effectively.
+  * *Low*: *"Your emotional wellness is low. Consider speaking to a campus counselor."*
+* **Social**: Developing a sense of connection, belonging, and a well-developed support system.
+  * *Low*: *"Your social wellness is very low. Try reaching out to just one friend or family member today."*
+* **Intellectual**: Recognising creative abilities and finding ways to expand knowledge and skills.
+* **Occupational**: Personal satisfaction and enrichment from one's work, including academic pursuits.
+* **Spiritual**: Developing a sense of meaning, purpose, balance, and peace.
+* **Environmental**: Occupying pleasant, stimulating environments that support well-being.
+* **Financial**: Satisfaction with current and future financial situations.
+
+---
+
+## 📅 Sunday Refresh (Weekly Refresh Screen)
+
+On Sundays, if the user has a recorded baseline assessment, a dedicated **Sunday Refresh** card appears on their Dashboard:
+
+* **Purpose**: Prompts the user to update their Tier 2 dimensions (Spiritual, Environmental, Financial) which are less volatile than Tier 1 dimensions (Physical, Emotional, Social, Intellectual, Occupational).
+* **Questionnaire**: Guides the user through three simple questions:
+  1. *Spiritual*: *"How much sense of meaning or purpose do you feel in your life right now?"*
+  2. *Environmental*: *"How safe, comfortable, and supportive do you find your living and study spaces?"*
+  3. *Financial*: *"How much in control of your financial situation do you feel currently?"*
+* **Radar Update**: Preserves existing Tier 1 scores in SQLite while inserting a new dimension rating set with updated Tier 2 scores, refreshing the radar chart.
 
 ---
 
@@ -166,6 +224,83 @@ sequenceDiagram
     
     Note over User, Supabase: Rehydration on Login: Supabase -> SQLite (synced = 1) -> Zustand Store -> Dashboard
 ```
+
+### Rehydration Pipeline (Supabase ➔ SQLite)
+Upon login (or when restoring an existing session), the app runs `rehydrateUserData(userId)` in `syncService.ts`:
+1. **Parallel Execution**: Fetches mood entries, wellness dimensions, completed exercises, and academic tasks in parallel using `Promise.allSettled` to maximize loading speeds.
+2. **Duplication Protection**: Checks the local SQLite table IDs. If a record from Supabase is not present in SQLite, it is inserted locally with `synced = 1` so it is marked as synced.
+3. **Zustand Refresh**: Loads the newly restored SQLite data into memory (`useMoodStore.loadEntries()` and `useAcademicStore.loadTasks()`).
+4. **Tips Restoration**: Restores read tip engagements into `tipsStore` to align dashboard counters.
+5. **Notification Setup**: Checks notification permissions. If granted, it schedules the user's preferred daily check-in reminder and any academic deadline events.
+6. **State Unlock**: Clears the `isRehydrating` store flag, moving the user from the loading screen to the active dashboard.
+
+---
+
+## 🔔 Account Notification Preferences Panel
+
+Located under Profile Settings ➔ **Notifications**, the application hosts a unified panel managing user alerts. It updates the user's Supabase auth metadata and updates local OS notification schedules:
+
+* **Daily Wellness Check-in Toggle**: Enable/disable daily reminders, complete with a custom time picker (dropdown selectors for hours).
+* **Exams & Deadlines Toggle**: Toggle to receive notifications 7 days and 1 day before preloaded academic calendar events.
+* **Weekly Report Alerts**: Get notified when weekly wellness summary reports are compiled.
+* **Monthly Report Alerts**: Get notified when monthly analytics reports are ready.
+* **Exam Countdown Nudges**: Receive stress-management nudges when exam events are 3 days away.
+
+---
+
+## 🗄 Database Model & Schema Specifications
+
+UniWell utilizes local SQLite caching (`wellness.db`) synced asynchronously with Supabase.
+
+### 1. Mood Logs (`mood_logs` table)
+* `id` (TEXT PRIMARY KEY) - Random unique string.
+* `user_id` (TEXT) - Owner user ID or `'guest'`.
+* `mood` (INTEGER) - Mood score (1 to 5).
+* `stress` (INTEGER) - Stress level (1 to 10).
+* `note` (TEXT) - Optional personal check-in note.
+* `created_at` (TEXT) - ISO timestamp.
+* `synced` (INTEGER) - `0` for unsynced, `1` for synced.
+
+### 2. Completed Exercises (`completed_exercises` table)
+* `id` (TEXT PRIMARY KEY)
+* `user_id` (TEXT)
+* `exercise_id` (TEXT) - Matching ID from exercises database.
+* `exercise_title` (TEXT)
+* `category` (TEXT)
+* `duration_seconds` (INTEGER)
+* `completed_at` (TEXT)
+* `synced` (INTEGER)
+
+### 3. Academic Tasks (`academic_tasks` table)
+* `id` (TEXT PRIMARY KEY)
+* `user_id` (TEXT)
+* `title` (TEXT) - Task title.
+* `sub` (TEXT) - Optional task description.
+* `tag` (TEXT) - `'ACADEMIC'` or `'PRIORITY'`.
+* `date` (TEXT) - Task date (YYYY-MM-DD).
+* `done` (INTEGER) - `1` if completed, `0` if active.
+* `priority` (INTEGER)
+* `synced` (INTEGER)
+* `alert_trigger` (TEXT) - `'none'`, `'1h'`, `'2h'`, `'1d'`, `'2d'`, `'7d'`.
+* `notification_id` (TEXT) - OS scheduled notification ID.
+
+### 4. Dimension Ratings (`dimension_ratings` table)
+* `id` (TEXT PRIMARY KEY)
+* `user_id` (TEXT)
+* `physical`, `emotional`, `social`, `intellectual`, `occupational`, `spiritual`, `environmental`, `financial` (INTEGER) - Dimension scores (0 to 100).
+* `created_at` (TEXT)
+* `synced` (INTEGER)
+
+### 5. Reports (`reports` table)
+* `id` (TEXT PRIMARY KEY)
+* `user_id` (TEXT)
+* `type` (TEXT) - `'weekly'`, `'monthly'`, or `'yearly'`.
+* `date_label` (TEXT)
+* `overall_score` (INTEGER)
+* `summary` (TEXT)
+* `content_json` (TEXT) - Detailed averages for that period.
+* `created_at` (TEXT)
+* `synced` (INTEGER)
 
 ---
 
@@ -247,6 +382,7 @@ sequenceDiagram
 |                                                             |
 |  💗 Personal: Prepare lab notes                             |
 |     - Alert: 2 Hours Before (7:00 AM)                       |
+|                                                             |
 +-------------------------------------------------------------+
 ```
 
@@ -273,13 +409,13 @@ sequenceDiagram
 
 ### Running Locally
 * **Standard Online Mode**:
-  ```bash
-  npx expo start
-  ```
+   ```bash
+   npx expo start
+   ```
 * **Offline Bundling Mode** (bypasses Expo CLI network validation checks when connected to mobile hotspots or low-bandwidth connections):
-  ```bash
-  npx expo start --offline
-  ```
+   ```bash
+   npx expo start --offline
+   ```
 
 ---
 Developed with ❤️ for students who strive for balance.
