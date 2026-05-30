@@ -100,8 +100,9 @@ export const checkAndGenerateReports = async (userId: string, wellnessData: Well
   let needsWeekly = false;
 
   if (!latestWeekly) {
-    // ENFORCE UNLOCK STRICTLY VIA CONSECUTIVE 7-DAY STREAK (ANYWHERE IN HISTORY)
-    if (hasHistorical7DayStreak(moodEntries)) {
+    // Generate the first weekly report if at least 6 days have passed since the oldest log (7 days inclusive, e.g. Monday to Sunday)
+    const daysSinceStart = Math.floor((now.getTime() - oldestEntryDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceStart >= 6) {
       needsWeekly = true;
     }
   } else {

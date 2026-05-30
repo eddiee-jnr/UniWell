@@ -422,7 +422,7 @@ export const DashboardScreen: React.FC = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
             <Ionicons name="trending-up" size={18} color={colors.secondary} style={{ marginRight: 8 }} />
             <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
-              Mood History
+              Mood Chart
             </Text>
           </View>
           <Text style={{ color: colors.muted, fontSize: 12, marginBottom: 16 }}>
