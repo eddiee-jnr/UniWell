@@ -62,8 +62,10 @@ export const useAuthStore = create<AuthState>((set) => ({
           // Refresh in-memory Zustand store state from the newly written SQLite data.
           const { useMoodStore } = await import('./moodStore');
           const { useAcademicStore } = await import('./academicStore');
+          const { useTipsStore } = await import('./tipsStore');
           await useMoodStore.getState().loadEntries();
           await useAcademicStore.getState().loadTasks();
+          await useTipsStore.getState().loadReadTips();
 
           // Restore read tips from Supabase so the ✓ checkmarks and tips count
           // are correct immediately after login without waiting for the dashboard

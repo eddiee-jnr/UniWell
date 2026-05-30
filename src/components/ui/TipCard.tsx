@@ -27,14 +27,30 @@ export const TipCard: React.FC<TipCardProps> = ({ tip, onMarkRead, isRead }) => 
     if (isRead) return;
     setMarking(true);
     try {
-      if (!isGuest && session) {
-        await supabase.from('tip_engagements').upsert({
-          user_id: session.user.id,
-          tip_id: tip.id,
-          read_at: new Date().toISOString(),
-        });
-      }
+      const userId = session?.user?.id || 'guest';
+      const readAt = new Date().toISOString();
+
+      // 1. Save locally to SQLite first (synced = 0)
+      const { saveTipEngagementLocally, markTipEngagementAsSynced } = await import('../../services/storage');
+      await saveTipEngagementLocally(userId, tip.id, readAt, 0);
+
+      // 2. Update UI/Zustand store immediately
       onMarkRead(tip.id);
+
+      // 3. Attempt syncing to Supabase if not a guest
+      if (!isGuest && session) {
+        const { error } = await supabase.from('tip_engagements').upsert({
+          user_id: userId,
+          tip_id: tip.id,
+          read_at: readAt,
+        });
+
+        if (!error) {
+          await markTipEngagementAsSynced(userId, tip.id);
+        } else {
+          console.warn('[TipCard] Failed to sync tip_engagements to Supabase:', error.message);
+        }
+      }
     } catch (err) {
       console.error('Failed to mark tip as read:', err);
     } finally {

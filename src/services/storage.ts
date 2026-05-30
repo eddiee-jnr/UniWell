@@ -48,6 +48,11 @@ export const initDatabase = async () => {
     'CREATE TABLE IF NOT EXISTS reports (id TEXT PRIMARY KEY NOT NULL, user_id TEXT, type TEXT, date_label TEXT, overall_score INTEGER, summary TEXT, content_json TEXT, created_at TEXT, synced INTEGER DEFAULT 0);'
   );
 
+  // Tip Engagements table (User read tips)
+  await db.execAsync(
+    'CREATE TABLE IF NOT EXISTS tip_engagements (user_id TEXT, tip_id TEXT, read_at TEXT, synced INTEGER DEFAULT 0, PRIMARY KEY (user_id, tip_id));'
+  );
+
   return db;
 };
 
@@ -60,6 +65,7 @@ export const clearAllLocalData = async () => {
     DELETE FROM mood_logs;
     DELETE FROM completed_exercises;
     DELETE FROM academic_tasks;
+    DELETE FROM tip_engagements;
   `);
 };
 
@@ -351,4 +357,31 @@ export const getUnsyncedReports = async (): Promise<WellnessReport[]> => {
 export const markReportAsSynced = async (id: string) => {
   if (!db) await initDatabase();
   await db.runAsync('UPDATE reports SET synced = 1 WHERE id = ?;', [id]);
+};
+
+// --- Tip Engagements Helpers ---
+
+export const saveTipEngagementLocally = async (userId: string, tipId: string, readAt: string, synced: number = 0) => {
+  if (!db) await initDatabase();
+  await db.runAsync(
+    'INSERT OR IGNORE INTO tip_engagements (user_id, tip_id, read_at, synced) VALUES (?, ?, ?, ?);',
+    [userId, tipId, readAt, synced]
+  );
+};
+
+export const getLocalTipEngagements = async (userId: string): Promise<string[]> => {
+  if (!db) await initDatabase();
+  const rows = await db.getAllAsync('SELECT tip_id FROM tip_engagements WHERE user_id = ?;', [userId]);
+  return (rows as { tip_id: string }[]).map(r => r.tip_id);
+};
+
+export const getUnsyncedTipEngagements = async (): Promise<{ user_id: string; tip_id: string; read_at: string }[]> => {
+  if (!db) await initDatabase();
+  const rows = await db.getAllAsync('SELECT user_id, tip_id, read_at FROM tip_engagements WHERE synced = 0;');
+  return rows as { user_id: string; tip_id: string; read_at: string }[];
+};
+
+export const markTipEngagementAsSynced = async (userId: string, tipId: string) => {
+  if (!db) await initDatabase();
+  await db.runAsync('UPDATE tip_engagements SET synced = 1 WHERE user_id = ? AND tip_id = ?;', [userId, tipId]);
 };

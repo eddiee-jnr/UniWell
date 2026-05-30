@@ -24,6 +24,10 @@ import {
   saveCalendarEventLocally,
   getLocalCalendarEvents,
   CalendarEvent,
+  getLocalTipEngagements,
+  saveTipEngagementLocally,
+  getUnsyncedTipEngagements,
+  markTipEngagementAsSynced,
 } from './storage';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -187,6 +191,32 @@ const rehydratePersonalCalendarEvents = async (userId: string): Promise<void> =>
   console.log(`[Rehydration] calendar events: handled via seedAcademicCalendar + academic_tasks`);
 };
 
+// ── 7. Tip engagements (read state for wellness tips) ──────────────────────────
+const rehydrateTipEngagements = async (userId: string): Promise<void> => {
+  const { data, error } = await supabase
+    .from('tip_engagements')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.warn('[Rehydration] tip_engagements error:', error.message);
+    return;
+  }
+  console.log(`[Rehydration] tip_engagements: ${data?.length ?? 0} records found`);
+
+  if (!data || data.length === 0) return;
+  const existing = await getLocalTipEngagements(userId);
+  const existingIds = new Set(existing);
+  let inserted = 0;
+  for (const engagement of data) {
+    if (!existingIds.has(engagement.tip_id)) {
+      await saveTipEngagementLocally(userId, engagement.tip_id, engagement.read_at || new Date().toISOString(), 1);
+      inserted++;
+    }
+  }
+  console.log(`[Rehydration] tip_engagements: inserted ${inserted} new rows`);
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN ENTRY POINT — called by authStore on every login
 // ─────────────────────────────────────────────────────────────────────────────
@@ -204,11 +234,12 @@ export const rehydrateUserData = async (userId: string): Promise<void> => {
       rehydrateAcademicTasks(userId),
       rehydrateReports(userId),
       rehydratePersonalCalendarEvents(userId),
+      rehydrateTipEngagements(userId),
     ]);
 
     // Log any sub-function failures without crashing the whole rehydration
     results.forEach((result, i) => {
-      const names = ['mood', 'dimensions', 'exercises', 'tasks', 'reports', 'calendar'];
+      const names = ['mood', 'dimensions', 'exercises', 'tasks', 'reports', 'calendar', 'tips'];
       if (result.status === 'rejected') {
         console.error(`[Rehydration] ❌ ${names[i]} sub-fetch failed:`, result.reason);
       }
@@ -325,6 +356,19 @@ export const syncPendingEntries = async () => {
       });
       if (!error) await markReportAsSynced(report.id);
       else console.warn('[Sync] reports upsert failed:', report.id, error.message);
+    }
+
+    // ── 6. Tip engagements ──────────────────────────────────────────────────
+    const unsyncedTips = await getUnsyncedTipEngagements();
+    for (const tip of unsyncedTips) {
+      if (!tip.user_id || tip.user_id === 'guest') continue;
+      const { error } = await supabase.from('tip_engagements').upsert({
+        user_id: tip.user_id,
+        tip_id: tip.tip_id,
+        read_at: tip.read_at,
+      });
+      if (!error) await markTipEngagementAsSynced(tip.user_id, tip.tip_id);
+      else console.warn('[Sync] tip_engagements upsert failed:', tip.tip_id, error.message);
     }
 
   } catch (err) {

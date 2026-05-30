@@ -15,6 +15,16 @@ export default function App() {
     const setupApp = async () => {
       try {
         await initDatabase();
+
+        // Load stored SQLite entries into Zustand stores immediately for offline/instant launch
+        const { useMoodStore } = await import('./src/store/moodStore');
+        const { useAcademicStore } = await import('./src/store/academicStore');
+        const { useTipsStore } = await import('./src/store/tipsStore');
+        
+        await useMoodStore.getState().loadEntries();
+        await useAcademicStore.getState().loadTasks();
+        await useTipsStore.getState().loadReadTips();
+
         await syncPendingEntries();
 
         const session = useAuthStore.getState().session;
