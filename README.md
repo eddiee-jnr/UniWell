@@ -170,19 +170,38 @@ To make health data actionable, UniWell translates raw numbers into textual inte
 ### 4. Swarbrick's 8 Dimensions of Wellness
 Each dimension displays its description and translates its calculated score (Low <= 40%, Moderate 41-65%, High >= 66%) into targeted advice:
 
-* **Physical**: Recognising the need for and engaging in physical activity, eating nourishing foods, and getting adequate sleep.
-  * *Low*: *"Your physical wellness is lower than ideal. Try adding one short walk or stretch to your daily routine this week."*
-  * *Moderate*: *"You are about halfway on your physical wellness. Try completing one physical exercise this week."*
-  * *High*: *"Your physical wellness is strong. You are maintaining excellent foundational habits which support your academic resilience."*
-* **Emotional**: Developing skills and strategies to cope with stress, and expressing feelings effectively.
-  * *Low*: *"Your emotional wellness is low. Consider speaking to a campus counselor."*
+* **Physical**: Recognising the need for and engaging in physical activity, eating nourishing foods, and getting adequate sleep and rest.
+  * *Low (<= 40%)*: *"Your physical wellness is lower than ideal. This suggests foundational habits around sleep or activity are slipping. Try adding one short walk or stretch to your daily routine this week."*
+  * *Moderate (41-65%)*: *"You are about halfway on your physical wellness. This suggests some healthy habits are in place but there is room to improve — particularly around sleep or physical activity. Try completing one physical exercise this week."*
+  * *High (>= 66%)*: *"Your physical wellness is strong. You are maintaining excellent foundational habits which support your academic resilience."*
+* **Emotional**: Developing skills and strategies to cope with stress. Being able to express feelings effectively.
+  * *Low (<= 40%)*: *"Your emotional wellness is low. You may be feeling overwhelmed or unable to process recent stressors. Please be gentle with yourself and consider speaking to a campus counselor."*
+  * *Moderate (41-65%)*: *"Your emotional wellness is moderate. You are coping, but the pressure might be building. A short breathing exercise today could help reset your focus."*
+  * *High (>= 66%)*: *"Your emotional wellness is strong. You are demonstrating excellent emotional regulation and coping strategies."*
 * **Social**: Developing a sense of connection, belonging, and a well-developed support system.
-  * *Low*: *"Your social wellness is very low. Try reaching out to just one friend or family member today."*
+  * *Low (<= 40%)*: *"Your social wellness is very low. Academic pressure can often lead to isolation. Try reaching out to just one friend or family member today."*
+  * *Moderate (41-65%)*: *"Your social wellness is moderate. You have some support, but could benefit from deeper connections. Consider joining a campus club or study group."*
+  * *High (>= 66%)*: *"Your social wellness is a key strength. You have a solid support system that acts as a buffer against academic stress."*
 * **Intellectual**: Recognising creative abilities and finding ways to expand knowledge and skills.
-* **Occupational**: Personal satisfaction and enrichment from one's work, including academic pursuits.
-* **Spiritual**: Developing a sense of meaning, purpose, balance, and peace.
-* **Environmental**: Occupying pleasant, stimulating environments that support well-being.
+  * *Low (<= 40%)*: *"Your intellectual wellness is lower than ideal. This could mean you are feeling understimulated or overwhelmed by coursework rather than genuinely engaged. Try exploring one topic this week purely out of curiosity."*
+  * *Moderate (41-65%)*: *"Your intellectual wellness is moderate. You are keeping up with academic demands, but may lack creative stimulation. Try learning something completely unrelated to your degree today."*
+  * *High (>= 66%)*: *"Your intellectual wellness is strong. You are genuinely engaging with your academic journey and finding mental stimulation rewarding."*
+* **Occupational**: Personal satisfaction and enrichment from one's work, including academic pursuits and career planning.
+  * *Low (<= 40%)*: *"Your occupational wellness is low. You may be feeling disconnected from your academic goals or worried about your career path."*
+  * *Moderate (41-65%)*: *"Your occupational wellness is moderate. You are making steady progress but might benefit from clearer short-term goals. Check off one small academic task today."*
+  * *High (>= 66%)*: *"Your occupational wellness is strong. You feel purposeful and satisfied with your academic and career trajectory."*
+* **Spiritual**: Developing a sense of meaning, purpose, balance, and peace in your life.
+  * *Low (<= 40%)*: *"Your spiritual wellness is low. You may be feeling a lack of purpose or disconnect from your values. Taking 10 minutes to journal might help ground you."*
+  * *Moderate (41-65%)*: *"Your spiritual wellness is moderate. You have some sense of balance but it might be wavering under pressure. Try spending a few moments in quiet reflection."*
+  * *High (>= 66%)*: *"Your spiritual wellness is strong. You have a deep sense of meaning and purpose that guides you through difficulties."*
+* **Environmental**: Good health by occupying pleasant, stimulating environments that support well-being.
+  * *Low (<= 40%)*: *"Your environmental wellness is low. A cluttered or unsafe space can amplify stress. Try organizing your immediate study study desk for 5 minutes."*
+  * *Moderate (41-65%)*: *"Your environmental wellness is moderate. Your spaces are functional but perhaps not deeply comforting. Adding some natural light or plants might help."*
+  * *High (>= 66%)*: *"Your environmental wellness is excellent. Your living and study environments actively support your peace of mind."*
 * **Financial**: Satisfaction with current and future financial situations.
+  * *Low (<= 40%)*: *"Your financial wellness is low. Financial stress is a major burden. We recommend visiting the campus financial aid office for guidance and support options."*
+  * *Moderate (41-65%)*: *"Your financial wellness is moderate. You are managing, but may feel tight. Budgeting a small weekly allowance for treats could help you feel more in control."*
+  * *High (>= 66%)*: *"Your financial wellness is strong. You appear to feel in control of your current situation, which removes a significant source of student stress."*
 
 ---
 
