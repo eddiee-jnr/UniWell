@@ -195,6 +195,53 @@ export const ReportDetailScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Month-on-Month Comparison Section */}
+        {content.comparison && Object.keys(content.comparison).length > 0 && (
+          <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 20, marginBottom: 24, borderWidth: 1, borderColor: colors.border }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <Ionicons name="trending-up" size={20} color={colors.secondary} style={{ marginRight: 8 }} />
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                📈 Month-on-Month Comparison
+              </Text>
+            </View>
+            <View style={{ gap: 14 }}>
+              {Object.entries(content.comparison).map(([dimKey, data]: [string, any], idx: number) => {
+                const current = data.current;
+                const previous = data.previous;
+                const diff = current - previous;
+                
+                let arrow = '→';
+                let arrowColor = colors.muted;
+                if (diff > 0) {
+                  arrow = '↑';
+                  arrowColor = '#4ADE80';
+                } else if (diff < 0) {
+                  arrow = '↓';
+                  arrowColor = '#F87171';
+                }
+                
+                const formattedName = dimKey.charAt(0).toUpperCase() + dimKey.slice(1);
+                
+                return (
+                  <View key={dimKey}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>{formattedName}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={{ color: colors.text, fontSize: 14, fontWeight: '800', marginRight: 8 }}>{current}%</Text>
+                        <Text style={{ color: arrowColor, fontSize: 16, fontWeight: '900', marginRight: 8 }}>{arrow}</Text>
+                        <Text style={{ color: colors.muted, fontSize: 12, fontWeight: '500' }}>(was {previous}%)</Text>
+                      </View>
+                    </View>
+                    {idx < Object.keys(content.comparison).length - 1 && (
+                      <View style={{ height: 1, backgroundColor: colors.border, marginTop: 14 }} />
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         {/* Written Analysis Section */}
         <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 20, marginBottom: 24, borderWidth: 1, borderColor: colors.border }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>

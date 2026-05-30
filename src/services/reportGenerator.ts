@@ -286,6 +286,7 @@ const generateMonthlyReport = async (userId: string, wellnessData: WellnessSumma
   });
 
   const avgMonthlyStress = monthlyMoods.length > 0 ? getAverage(monthlyMoods.map(e => e.stress)) : 0;
+  const avgMonthlyMood = monthlyMoods.length > 0 ? getAverage(monthlyMoods.map(e => e.mood)) : 0;
 
   const monthlyEx = (await getLocalCompletedExercises(userId)).filter(ex => {
     const d = new Date(ex.completed_at);
@@ -307,10 +308,17 @@ const generateMonthlyReport = async (userId: string, wellnessData: WellnessSumma
   const totalTasks = monthlyTasks.length;
   const taskRatio = totalTasks > 0 ? (completedTasks / totalTasks) : 0;
 
+  const allReadTips = await getLocalTipEngagementsDetail(userId);
+  const monthlyTips = allReadTips.filter(t => new Date(t.read_at) >= startOfMonth && new Date(t.read_at) <= endOfMonth);
+  const monthlyTipsCount = monthlyTips.length;
+
+  const totalDurationSecs = monthlyEx.reduce((sum, ex) => sum + ex.duration_seconds, 0);
+  const durationMins = Math.round(totalDurationSecs / 60);
+
   const dims = {
     physical: Math.min(100, Math.round(basePhys + (monthlyEx.length * 5))),
     emotional: Math.min(100, Math.max(0, Math.round(baseEmo + ((10 - avgMonthlyStress) * 2) + (monthlyMoods.length * 3)))),
-    social: Math.min(100, Math.round(baseSoc + (wellnessData.tipsReadCount * 2))),
+    social: Math.min(100, Math.round(baseSoc + (monthlyTipsCount * 5))),
     intellectual: Math.min(100, Math.round(baseInt + (taskRatio * 20))),
     occupational: Math.min(100, Math.round(baseOcc + (taskRatio * 10))),
     spiritual: baseline?.spiritual || 50,
@@ -320,21 +328,103 @@ const generateMonthlyReport = async (userId: string, wellnessData: WellnessSumma
 
   const overall = getOverallScore(dims);
 
+  const dimsList = [
+    { name: 'Physical', value: dims.physical },
+    { name: 'Emotional', value: dims.emotional },
+    { name: 'Social', value: dims.social },
+    { name: 'Intellectual', value: dims.intellectual },
+    { name: 'Occupational', value: dims.occupational },
+    { name: 'Spiritual', value: dims.spiritual },
+    { name: 'Environmental', value: dims.environmental },
+    { name: 'Financial', value: dims.financial },
+  ].sort((a, b) => b.value - a.value);
+
+  const highest = dimsList[0];
+  const lowest = dimsList[7];
+
+  const trends: string[] = [];
+  const worries: string[] = [];
+
+  // Analyze Trends
+  if (monthlyMoods.length > 0) {
+    trends.push(`Checked in mood and stress logs ${monthlyMoods.length} times this month.`);
+    const sortedMoods = [...monthlyMoods].sort((a, b) => b.mood - a.mood);
+    const bestDay = new Date(sortedMoods[0].created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    trends.push(`Your highest logged mood was on ${bestDay} (rated ${sortedMoods[0].mood}/5).`);
+  }
+  if (monthlyEx.length > 0) {
+    trends.push(`Completed ${monthlyEx.length} exercise sessions this month, totaling ${durationMins} minutes of mindfulness.`);
+  }
+  if (monthlyTipsCount > 0) {
+    trends.push(`Read ${monthlyTipsCount} wellness tips this month to support your student health.`);
+  }
+  if (totalTasks > 0) {
+    trends.push(`Completed ${completedTasks} of ${totalTasks} academic tasks (${Math.round(taskRatio * 100)}%).`);
+  }
+
+  // Analyze Worries
+  if (avgMonthlyStress >= 7) {
+    worries.push(`High average stress levels detected (${avgMonthlyStress.toFixed(1)}/10) over this month. Consider checking in on your stressors.`);
+  }
+  if (monthlyEx.length === 0) {
+    worries.push(`No physical or mindfulness exercises logged this month. Regular exercise is highly beneficial for stress recovery.`);
+  }
+  if (monthlyMoods.length < 8) {
+    worries.push(`Only logged mood ${monthlyMoods.length} times this month. Try to check in at least twice a week to build better insights.`);
+  }
+  if (totalTasks > 0 && taskRatio < 0.5) {
+    worries.push(`Low academic completion rate (${Math.round(taskRatio * 100)}%). Backlogs can increase pressure near exams.`);
+  }
+  if (monthlyTipsCount === 0) {
+    worries.push(`No wellness tips read this month. Learning coping strategies is key to managing university life.`);
+  }
+
   let summary = "This has been a strong month for your wellbeing.";
+  let recommendation = "Keep up the great work and carry this momentum into the next month. Focus on maintaining a regular exercise schedule.";
+
   if (overall < 40) {
     summary = "This month has been challenging for your wellness overall.";
+    recommendation = "If this month showed persistent stress and low mood, please consider reaching out for professional support via the campus directory.";
   } else if (overall < 65) {
     summary = "Your month had real highs and some difficult stretches.";
+    recommendation = "Focus on balancing your lowest dimensions of wellness. Scheduling blocks for light physical activity and reading at least 2 wellness tips next month could help.";
+  }
+
+  const latestMonthly = await getLatestReportByType(userId, 'monthly');
+  const comparison: Record<string, { current: number; previous: number }> = {};
+  if (latestMonthly) {
+    try {
+      const prevContent = JSON.parse(latestMonthly.content_json);
+      if (prevContent.dimensions) {
+        Object.keys(dims).forEach(key => {
+          comparison[key] = {
+            current: (dims as any)[key],
+            previous: prevContent.dimensions[key] ?? 50
+          };
+        });
+      }
+    } catch (e) {
+      console.error('Failed to parse previous monthly report for comparison:', e);
+    }
   }
 
   const content = {
-    mood_average: 10 - avgMonthlyStress,
-    stress_average: avgMonthlyStress,
-    exercises_completed: monthlyEx.length,
+    mood_average: Number(avgMonthlyMood.toFixed(1)),
+    stress_average: Number(avgMonthlyStress.toFixed(1)),
+    highest_dimension: highest.name,
+    lowest_dimension: lowest.name,
     dimensions: dims,
-    support_message: overall < 40 
-      ? "If this month showed persistent stress and low mood, please consider reaching out for professional support." 
-      : "Keep up the great work and carry this momentum into the next month."
+    recommendation,
+    mood_logs_count: monthlyMoods.length,
+    completed_exercises_count: monthlyEx.length,
+    exercises_duration_mins: durationMins,
+    tips_read_count: monthlyTipsCount,
+    tasks_completed_count: completedTasks,
+    tasks_total_count: totalTasks,
+    active_streak: wellnessData.streakCount,
+    trends,
+    worries,
+    comparison: Object.keys(comparison).length > 0 ? comparison : undefined
   };
 
   const reportId = Math.random().toString(36).substring(2, 15);
