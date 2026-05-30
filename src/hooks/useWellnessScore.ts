@@ -305,8 +305,55 @@ export const useWellnessScore = (): WellnessSummary => {
       const completedTasksCount = localTasks.filter(t => t.done).length;
       const totalTasksCount = localTasks.length;
 
+      // ── Exercises: if local SQLite is empty, pull directly from Supabase ──
+      // This covers the gap between login and rehydration finishing.
+      if (completedCount === 0 && session?.user.id) {
+        try {
+          const { data: sbEx } = await supabase
+            .from('completed_exercises')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('completed_at', { ascending: false });
+          if (sbEx && sbEx.length > 0) {
+            finalExercises = sbEx as CompletedExercise[];
+            completedCount = sbEx.length;
+            setAllExercises(finalExercises);
+            setCompletedExercisesCount(completedCount);
+          }
+        } catch (_) {}
+      }
+
+      // ── Tips: if still 0, pull directly from Supabase ───────────────────
+      if (currentTips === 0 && session?.user.id) {
+        try {
+          const { count: sbTipCount } = await supabase
+            .from('tip_engagements')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', session.user.id);
+          if (sbTipCount && sbTipCount > 0) {
+            currentTips = sbTipCount;
+            setTipsReadCount(currentTips);
+          }
+        } catch (_) {}
+      }
+
       // --- Calculate Dimensions Dynamically ---
-      const baseline = await getLatestDimensionRatings(userId);
+      // Try SQLite first (fast). If empty, query Supabase directly so the
+      // radar chart and dimension scores always show after login.
+      let baseline = await getLatestDimensionRatings(userId);
+      if (!baseline && session?.user.id) {
+        try {
+          const { data: sbDims } = await supabase
+            .from('dimension_ratings')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (sbDims && sbDims.length > 0) {
+            baseline = sbDims[0] as any;
+          }
+        } catch (_) {}
+      }
       setHasBaseline(!!baseline);
       
       if (!baseline) {
