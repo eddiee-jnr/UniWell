@@ -263,7 +263,7 @@ export const CalendarScreen = () => {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 12 }}>
           <Text style={{ color: colors.text, fontSize: 26, fontWeight: '800' }}>Academic Flow</Text>
           <View style={{ backgroundColor: colors.primary + '22', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 }}>
-            <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '800' }}>GIMPA 2024/25</Text>
+            <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '800' }}>GIMPA 2025/26</Text>
           </View>
         </View>
 
