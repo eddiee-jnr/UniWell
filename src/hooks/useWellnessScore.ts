@@ -15,20 +15,36 @@ import { useTipsStore } from '../store/tipsStore';
 const calculateStreak = (entries: MoodEntry[]): number => {
   if (!entries || entries.length === 0) return 0;
 
+  const formatDate = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
   // Build a set of all unique dates that have at least one mood entry.
   const uniqueDates = new Set<string>();
   entries.forEach(e => {
     if (e.created_at) {
-      uniqueDates.add(new Date(e.created_at).toISOString().split('T')[0]);
+      uniqueDates.add(formatDate(new Date(e.created_at)));
     }
   });
 
   if (uniqueDates.size === 0) return 0;
 
   // Sort the unique date strings descending so we start from the MOST RECENT
-  // logged day — NOT necessarily today. This means a user who was away for
-  // several days still sees their accumulated streak instead of 0.
   const sortedDates = Array.from(uniqueDates).sort((a, b) => (a > b ? -1 : 1));
+
+  const todayStr = formatDate(new Date());
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = formatDate(yesterday);
+
+  // If the user has missed both yesterday and today, their streak is broken
+  const mostRecentDateStr = sortedDates[0];
+  if (mostRecentDateStr !== todayStr && mostRecentDateStr !== yesterdayStr) {
+    return 0;
+  }
 
   let streak = 1; // the most recent day counts as 1
   for (let i = 1; i < sortedDates.length; i++) {
