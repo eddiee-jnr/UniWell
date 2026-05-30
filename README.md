@@ -49,7 +49,10 @@ Every chart in the app automatically scales using a unified range selector:
 ### 2. Mood & Wellness Tracker
 * **Daily Check-in**: Track your daily mood (scale of 1-5) and stress levels (scale of 1-10) with optional personal reflection notes.
 * **Check-in History Feed**: A scrollable history feed at the bottom of the Track tab displaying every past check-in (mood level, stress level, timestamp, and notes) sorted chronologically.
-* **Tips Integration**: Integrates a library of wellness tips across `academic`, `sleep`, and `social` categories. Reading and marking them as read triggers checks and increments your dashboard achievements.
+* **Tips Integration**: Integrates a curated library of wellness tips across three specific categories. Reading and marking them as read increments your dashboard achievements:
+  1. **Academic**: Focuses on cognitive science study techniques, including the *Pomodoro Technique*, *Active Recall*, note review triggers, planning strategies, and creating dedicated study spaces.
+  2. **Sleep**: Focuses on sleep hygiene tips, such as screen avoidance before bed, room temperature cooling, caffeine half-life limitations, and doing a nighttime "brain dump" to reduce racing thoughts.
+  3. **Social**: Focuses on managing social anxiety, scheduling connection times, active presence (putting screens away during conversations), and joining campus societies.
 
 ### 3. Streak-Based Wellness Reports
 * **Reports Generator**: Weekly, Monthly, and Yearly reports are compiled.
@@ -78,12 +81,6 @@ Direct dial and mail buttons to connect with campus security and wellness depart
 * **Campus Security**: One-tap phone link to GIMPA Campus Security (+233 302 401 682).
 * **Counseling Services**: One-tap email scheduling hook (`counseling@gimpa.edu.gh`).
 * **Campus Health**: Link to medical center resources.
-
-### 7. Privacy Settings & Data Portability
-Located under the Profile screen, this provides total transparency:
-* **Diagnostics Toggle**: Disable anonymous telemetry sharing.
-* **Download My Data**: Generates a unified JSON schema containing all local logs (moods, exercises, tasks, reports) and uses the native `Share` API to export it.
-* **Wipe Device Cache**: Erases local SQLite tables cleanly while keeping cloud database storage intact.
 
 ---
 
@@ -133,6 +130,7 @@ UniWell offers a fully-functional, offline-first **Guest Mode** for immediate on
 * **Stat Card Replacement**: The "DAY STREAK" card is hidden on the Dashboard screen, leaving only "EXERCISES" and "READ TIPS" visible.
 * **Simplified Exercises**: The completed sessions history feed is hidden on the Exercise library screen.
 * **Coming Soon Chatbot FAB**: A floating action button with a robot icon appears on the Dashboard screen for guests. Tapping it shows a notice about the upcoming AI wellness companion.
+* **Support Directory Filter**: In Guest Mode, the "Visit Clinic" link (directing to GIMPA web resources) is filtered out and hidden to limit external access.
 
 ---
 
@@ -201,6 +199,17 @@ On Sundays, if the user has a recorded baseline assessment, a dedicated **Sunday
 
 ---
 
+## 🛡️ Privacy, Telemetry & GDPR Compliance
+
+UniWell incorporates robust privacy management tools on the Privacy screen to give students full control over their personal data:
+
+* **Diagnostics Telemetry Toggle**: Allows users to enable or disable anonymous usage diagnostics telemetry sharing.
+* **Data Portability**: The **"Download My Data"** button compiles all local tables (check-ins, exercise logs, tasks, reports) into a standardized JSON payload and calls the native `Share` API to export it.
+* **Wipe Device Cache**: Erases local SQLite tables cleanly while keeping cloud database storage intact.
+* **GDPR Account Deletion Request**: Students can permanently delete their accounts. Tapping this triggers a deletion request, notifies the user that cloud credentials will be purged within 48 hours, and automatically signs the user out.
+
+---
+
 ## 🔄 SQLite & Supabase Sync Pipeline
 
 ```mermaid
@@ -225,7 +234,7 @@ sequenceDiagram
     Note over User, Supabase: Rehydration on Login: Supabase -> SQLite (synced = 1) -> Zustand Store -> Dashboard
 ```
 
-### Rehydration Pipeline (Supabase ➔ SQLite)
+### 1. Rehydration Pipeline (Supabase ➔ SQLite)
 Upon login (or when restoring an existing session), the app runs `rehydrateUserData(userId)` in `syncService.ts`:
 1. **Parallel Execution**: Fetches mood entries, wellness dimensions, completed exercises, and academic tasks in parallel using `Promise.allSettled` to maximize loading speeds.
 2. **Duplication Protection**: Checks the local SQLite table IDs. If a record from Supabase is not present in SQLite, it is inserted locally with `synced = 1` so it is marked as synced.
@@ -233,6 +242,17 @@ Upon login (or when restoring an existing session), the app runs `rehydrateUserD
 4. **Tips Restoration**: Restores read tip engagements into `tipsStore` to align dashboard counters.
 5. **Notification Setup**: Checks notification permissions. If granted, it schedules the user's preferred daily check-in reminder and any academic deadline events.
 6. **State Unlock**: Clears the `isRehydrating` store flag, moving the user from the loading screen to the active dashboard.
+
+### 2. Live Sync Status & Offloading Queue
+Students can monitor connection and queue details in the **Data Integration** settings sub-screen:
+* **Visual Status Badges**: Displays a green dot **"Connected"** badge when authenticated and linked to Supabase, or an orange **"Offline / Guest"** badge when offline or in Guest Mode.
+* **Five-Queue Sync Counts**: Displays individual counts of pending uploads in SQLite for:
+  1. *Mood & Stress Logs*
+  2. *Completed Exercises*
+  3. *Academic Tasks & Events*
+  4. *Dimension Self-Assessments*
+  5. *Generated Wellness Reports*
+* **Manual Sync Control**: Provides a manual "Sync Now" button that triggers the upload loop, updating SQLite records to `synced = 1`.
 
 ---
 
