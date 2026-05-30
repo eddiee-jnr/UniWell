@@ -49,10 +49,13 @@ Every chart in the app automatically scales using a unified range selector:
 ### 2. Mood & Wellness Tracker
 * **Daily Check-in**: Track your daily mood (scale of 1-5) and stress levels (scale of 1-10) with optional personal reflection notes.
 * **Check-in History Feed**: A scrollable history feed at the bottom of the Track tab displaying every past check-in (mood level, stress level, timestamp, and notes) sorted chronologically.
-* **Tips Integration**: Integrates a curated library of wellness tips across three specific categories. Reading and marking them as read increments your dashboard achievements:
-  1. **Academic**: Focuses on cognitive science study techniques, including the *Pomodoro Technique*, *Active Recall*, note review triggers, planning strategies, and creating dedicated study spaces.
-  2. **Sleep**: Focuses on sleep hygiene tips, such as screen avoidance before bed, room temperature cooling, caffeine half-life limitations, and doing a nighttime "brain dump" to reduce racing thoughts.
-  3. **Social**: Focuses on managing social anxiety, scheduling connection times, active presence (putting screens away during conversations), and joining campus societies.
+* **Tips Integration & Cloud Sync**: Integrates a curated library of wellness tips across three specific categories.
+  * **Tip Database & Fallback**: Fetches active tips from the Supabase `wellness_tips` table. If offline or network fetch fails, it fallbacks to local `tips.json` and renders a warning banner: *"📴 Showing offline tips. Pull to refresh when connected."*
+  * **Curated Categories**:
+    1. *Academic*: Focuses on cognitive science study techniques, including the *Pomodoro Technique*, *Active Recall*, note review triggers, planning strategies, and study spaces.
+    2. *Sleep*: Focuses on sleep hygiene, such as screen avoidance before bed, room temperature cooling, caffeine half-life limitations, and doing a nighttime "brain dump" to reduce racing thoughts.
+    3. *Social*: Focuses on managing social anxiety, scheduling connection times, active presence (putting screens away during conversations), and joining campus societies.
+  * **Engagement Tracking**: Marking a tip as read triggers an upsert to the Supabase `tip_engagements` table, tracking `user_id`, `tip_id`, and `read_at` to update your dashboard achievements.
 
 ### 3. Streak-Based Wellness Reports
 * **Reports Generator**: Weekly, Monthly, and Yearly reports are compiled.
@@ -70,8 +73,13 @@ Every chart in the app automatically scales using a unified range selector:
 * **Tactile Completion alert**: Synchronous `Vibration.vibrate(...)` trigger fires immediately when the session ends, bypassing async chime audio latency.
 * **Exercise History Log**: Displays completed sessions at the bottom of the Exercise tab with duration and timestamp.
 
-### 5. GIMPA Academic Calendar & Custom Reminders
+### 5. GIMPA Academic Calendar & Proactive Stress Prep
 * **GIMPA Institutional Dates**: Pre-seeded with calendar milestones (mid-terms, registration periods, final exams).
+* **Today Button Reset**: A calendar control header button that immediately resets the active grid and date selection to today.
+* **Stacked Event Dots Density Indicator**: Calendar grid days render stacked dots matching the colors of scheduled events (Exams, Deadlines, Holidays, events), showing density (up to 3, with a `+` symbol for extra) to indicate busy days without clutter.
+* **Upcoming Commitments Strip Carousel**: A horizontal scrolling strip at the bottom of the calendar screen displaying the next 3 commitments starting from today. Includes dynamic countdown labels (*"Today"*, *"Tomorrow"*, or *"X days away"*) highlighted in red when urgent (e.g. <=3 days away).
+* **Heavy Week Alert Banner**: If the active calendar week contains 3 or more high-priority events, the app displays a prominent red warning banner: *"Heavy Week Alert. This looks like a heavy week. Your exercises page has tools to help you manage the pressure."* with a button to go to the Exercises tab.
+* **Proactive Stress Prep Nudge**: If the active date contains an exam or deadline, the calendar screen displays a dedicated Box Breathing suggestion block: *"Stress Prep: Box Breathing. Your academic commitments are approaching. Ground your nervous system with a calming Box Breathing session before heading into study mode."*
 * **Customizable Alerts**: Custom reminder tasks allow users to select alert notification offsets (`None`, `1 Hour Before`, `2 Hours Before`, `1 Day Before`, `2 Days Before`, `1 Week Before`).
 * **Notification Cancellation**: Completing or deleting a task automatically queries its `notification_id` and cancels the OS scheduled notification.
 
@@ -130,7 +138,7 @@ UniWell offers a fully-functional, offline-first **Guest Mode** for immediate on
 * **Stat Card Replacement**: The "DAY STREAK" card is hidden on the Dashboard screen, leaving only "EXERCISES" and "READ TIPS" visible.
 * **Simplified Exercises**: The completed sessions history feed is hidden on the Exercise library screen.
 * **Coming Soon Chatbot FAB**: A floating action button with a robot icon appears on the Dashboard screen for guests. Tapping it shows a notice about the upcoming AI wellness companion.
-* **Support Directory Filter**: In Guest Mode, the "Visit Clinic" link (directing to GIMPA web resources) is filtered out and hidden to limit external access.
+* **Support Directory Filter**: In Guest Mode, the "Visit Clinic" GIMPA link is filtered out and hidden to restrict external resource use.
 
 ---
 
@@ -256,7 +264,7 @@ sequenceDiagram
 ### 1. Rehydration Pipeline (Supabase ➔ SQLite)
 Upon login (or when restoring an existing session), the app runs `rehydrateUserData(userId)` in `syncService.ts`:
 1. **Parallel Execution**: Fetches mood entries, wellness dimensions, completed exercises, and academic tasks in parallel using `Promise.allSettled` to maximize loading speeds.
-2. **Duplication Protection**: Checks the local SQLite table IDs. If a record from Supabase is not present in SQLite, it is inserted locally with `synced = 1` so it is marked as synced.
+2. **Duplication Protection**: Checks the local SQLite table IDs. If a record from Supabase is not present in SQLite, it is inserted locally with `synced: 1` so it is marked as synced.
 3. **Zustand Refresh**: Loads the newly restored SQLite data into memory (`useMoodStore.loadEntries()` and `useAcademicStore.loadTasks()`).
 4. **Tips Restoration**: Restores read tip engagements into `tipsStore` to align dashboard counters.
 5. **Notification Setup**: Checks notification permissions. If granted, it schedules the user's preferred daily check-in reminder and any academic deadline events.
@@ -272,6 +280,7 @@ Students can monitor connection and queue details in the **Data Integration** se
   4. *Dimension Self-Assessments*
   5. *Generated Wellness Reports*
 * **Manual Sync Control**: Provides a manual "Sync Now" button that triggers the upload loop, updating SQLite records to `synced = 1`.
+* **Foreground Transition Auto-Sync**: An AppState listener is active on initialization. Toggling the app state to `'active'` (e.g. launching or bringing it back to the foreground) automatically triggers `syncPendingEntries()` to sync any offline check-ins or achievements immediately.
 
 ---
 
