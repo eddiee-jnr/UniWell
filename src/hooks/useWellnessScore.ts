@@ -14,42 +14,36 @@ import { useTipsStore } from '../store/tipsStore';
 
 const calculateStreak = (entries: MoodEntry[]): number => {
   if (!entries || entries.length === 0) return 0;
-  
-  const sorted = [...entries].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  
+
+  // Build a set of all unique dates that have at least one mood entry.
   const uniqueDates = new Set<string>();
-  sorted.forEach(e => {
+  entries.forEach(e => {
     if (e.created_at) {
-      const d = new Date(e.created_at);
-      uniqueDates.add(d.toISOString().split('T')[0]);
+      uniqueDates.add(new Date(e.created_at).toISOString().split('T')[0]);
     }
   });
-  
-  const todayStr = today.toISOString().split('T')[0];
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
-  
-  if (!uniqueDates.has(todayStr) && !uniqueDates.has(yesterdayStr)) {
-    return 0;
-  }
-  
-  let streak = 0;
-  let checkDate = uniqueDates.has(todayStr) ? today : yesterday;
-  
-  while (true) {
-    const checkDateStr = checkDate.toISOString().split('T')[0];
-    if (uniqueDates.has(checkDateStr)) {
+
+  if (uniqueDates.size === 0) return 0;
+
+  // Sort the unique date strings descending so we start from the MOST RECENT
+  // logged day — NOT necessarily today. This means a user who was away for
+  // several days still sees their accumulated streak instead of 0.
+  const sortedDates = Array.from(uniqueDates).sort((a, b) => (a > b ? -1 : 1));
+
+  let streak = 1; // the most recent day counts as 1
+  for (let i = 1; i < sortedDates.length; i++) {
+    const prev = new Date(sortedDates[i - 1]);
+    const curr = new Date(sortedDates[i]);
+    // Check if curr is exactly one day before prev
+    const diffMs = prev.getTime() - curr.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 1) {
       streak++;
-      checkDate.setDate(checkDate.getDate() - 1);
     } else {
-      break;
+      break; // gap found — stop counting
     }
   }
-  
+
   return streak;
 };
 
@@ -256,12 +250,44 @@ export const useWellnessScore = (): WellnessSummary => {
           setAllExercises(finalExercises);
 
         } catch (rpcErr) {
-          console.warn('[WellnessScore] Supabase RPC failed, falling back to local SQLite data:', rpcErr);
+          console.warn('[WellnessScore] Supabase RPC failed, falling back to direct Supabase queries:', rpcErr);
           currentRecent = localRecent;
           currentStreak = calculateStreak(allLocal);
-          currentTips = readTips.length;
           setAllEntries(allLocal);
-          setAllExercises(localExercises);
+
+          // Even when the RPC fails, pull exercises and tips directly from
+          // Supabase so the counts are never stuck at 0 due to empty local SQLite.
+          try {
+            const { data: serverExFallback } = await supabase
+              .from('completed_exercises')
+              .select('*')
+              .eq('user_id', session!.user.id)
+              .order('completed_at', { ascending: false });
+
+            const mergedFallback = [...localExercises];
+            (serverExFallback ?? []).forEach((se: CompletedExercise) => {
+              if (!mergedFallback.some(le => le.id === se.id)) mergedFallback.push(se);
+            });
+            mergedFallback.sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime());
+            finalExercises = mergedFallback;
+            completedCount = mergedFallback.length;
+            setAllExercises(mergedFallback);
+
+            // Tips: trust in-memory store first, then query Supabase directly
+            if (readTips.length > 0) {
+              currentTips = readTips.length;
+            } else {
+              const { count: tipCountFallback } = await supabase
+                .from('tip_engagements')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', session!.user.id);
+              currentTips = tipCountFallback ?? 0;
+            }
+          } catch (fallbackErr) {
+            console.warn('[WellnessScore] Direct fallback also failed, showing local-only:', fallbackErr);
+            currentTips = readTips.length;
+            setAllExercises(localExercises);
+          }
         }
       }
 
@@ -338,11 +364,13 @@ export const useWellnessScore = (): WellnessSummary => {
     }, [fetchData])
   );
 
+  // Re-fetch when rehydration finishes OR when the in-memory readTips list
+  // changes (i.e. authStore just restored tip IDs from Supabase after login).
   useEffect(() => {
     if (!isRehydrating) {
       fetchData();
     }
-  }, [isRehydrating, fetchData]);
+  }, [isRehydrating, fetchData, readTips.length]);
 
   return { 
     last7Days, 
