@@ -32,6 +32,20 @@ export const ReportDetailScreen: React.FC = () => {
     ? content.dimensions[content.lowest_dimension.toLowerCase()] 
     : null;
 
+  const getMoodEmojiAndLabel = (score: number) => {
+    if (score >= 4.5) return '😁 Great';
+    if (score >= 3.5) return '🙂 Good';
+    if (score >= 2.5) return '😐 Neutral';
+    if (score >= 1.5) return '🙁 Down';
+    return '😢 Bad';
+  };
+
+  const getStressLabel = (score: number) => {
+    if (score >= 7.5) return '😫 High';
+    if (score >= 4.5) return '😐 Moderate';
+    return '😌 Low';
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Navigation Header */}
@@ -83,57 +97,77 @@ export const ReportDetailScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Core Metrics Table Section */}
+        {/* Core Averages Row Section */}
+        <View style={{ marginBottom: 24 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+            <Ionicons name="trending-up" size={20} color={colors.secondary} style={{ marginRight: 8 }} />
+            <Text style={{ color: colors.text, fontSize: 16, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              📈 Core Averages
+            </Text>
+          </View>
+          
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            {/* Avg Mood Card */}
+            <View style={{ width: '23%', backgroundColor: colors.surface, borderRadius: 12, padding: 8, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}>
+              <Text style={{ color: colors.muted, fontSize: 9, fontWeight: '700', textTransform: 'uppercase', marginBottom: 6, textAlign: 'center' }} numberOfLines={1}>Avg Mood</Text>
+              <Text style={{ color: colors.text, fontSize: 13, fontWeight: '800', marginBottom: 4 }}>{content.mood_average !== undefined ? `${content.mood_average}/5` : 'N/A'}</Text>
+              <Text style={{ color: colors.muted, fontSize: 9, fontWeight: '600', textAlign: 'center' }} numberOfLines={2}>
+                {content.mood_average !== undefined ? getMoodEmojiAndLabel(content.mood_average) : ''}
+              </Text>
+            </View>
+
+            {/* Avg Stress Card */}
+            <View style={{ width: '23%', backgroundColor: colors.surface, borderRadius: 12, padding: 8, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}>
+              <Text style={{ color: colors.muted, fontSize: 9, fontWeight: '700', textTransform: 'uppercase', marginBottom: 6, textAlign: 'center' }} numberOfLines={1}>Avg Stress</Text>
+              <Text style={{ color: colors.text, fontSize: 13, fontWeight: '800', marginBottom: 4 }}>{content.stress_average !== undefined ? `${content.stress_average}/10` : 'N/A'}</Text>
+              <Text style={{ color: colors.muted, fontSize: 9, fontWeight: '600', textAlign: 'center' }} numberOfLines={2}>
+                {content.stress_average !== undefined ? getStressLabel(content.stress_average) : ''}
+              </Text>
+            </View>
+
+            {/* Strongest Card */}
+            <View style={{ width: '23%', backgroundColor: colors.surface, borderRadius: 12, padding: 8, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}>
+              <Text style={{ color: colors.muted, fontSize: 9, fontWeight: '700', textTransform: 'uppercase', marginBottom: 6, textAlign: 'center' }} numberOfLines={1}>Strongest</Text>
+              <Text style={{ color: '#4ADE80', fontSize: 10, fontWeight: '800', marginBottom: 4, textAlign: 'center' }} numberOfLines={1}>
+                {content.highest_dimension || 'N/A'}
+              </Text>
+              <Text style={{ color: colors.muted, fontSize: 9, fontWeight: '600', textAlign: 'center' }} numberOfLines={1}>
+                ⭐️ {highestScore !== null ? `${highestScore}%` : ''}
+              </Text>
+            </View>
+
+            {/* Focus Area Card */}
+            <View style={{ width: '23%', backgroundColor: colors.surface, borderRadius: 12, padding: 8, alignItems: 'center', borderWidth: 1, borderColor: colors.border }}>
+              <Text style={{ color: colors.muted, fontSize: 9, fontWeight: '700', textTransform: 'uppercase', marginBottom: 6, textAlign: 'center' }} numberOfLines={1}>Focus Area</Text>
+              <Text style={{ color: '#F87171', fontSize: 10, fontWeight: '800', marginBottom: 4, textAlign: 'center' }} numberOfLines={1}>
+                {content.lowest_dimension || 'N/A'}
+              </Text>
+              <Text style={{ color: colors.muted, fontSize: 9, fontWeight: '600', textAlign: 'center' }} numberOfLines={1}>
+                ⚠️ {lowestScore !== null ? `${lowestScore}%` : ''}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Behavior & Activity List Card */}
         <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 20, marginBottom: 24, borderWidth: 1, borderColor: colors.border }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
             <Ionicons name="stats-chart" size={20} color={colors.secondary} style={{ marginRight: 8 }} />
             <Text style={{ color: colors.text, fontSize: 16, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              📊 Core Metrics
+              📊 Behavior & Activity
             </Text>
           </View>
           <View style={{ gap: 14 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Average Mood</Text>
+              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Exercises Completed</Text>
               <Text style={{ color: colors.text, fontSize: 14, fontWeight: '800' }}>
-                {content.mood_average !== undefined ? `${content.mood_average} / 5` : 'N/A'}
+                {content.completed_exercises_count ?? 0} {content.exercises_duration_mins ? `(${content.exercises_duration_mins} mins)` : '(0 mins)'}
               </Text>
             </View>
             <View style={{ height: 1, backgroundColor: colors.border }} />
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Average Stress</Text>
-              <Text style={{ color: colors.text, fontSize: 14, fontWeight: '800' }}>
-                {content.stress_average !== undefined ? `${content.stress_average} / 10` : 'N/A'}
-              </Text>
-            </View>
-            <View style={{ height: 1, backgroundColor: colors.border }} />
-
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Strongest Area</Text>
-              <Text style={{ color: '#4ADE80', fontSize: 14, fontWeight: '800' }}>
-                {content.highest_dimension ? `${content.highest_dimension} (${highestScore ?? 0}%)` : 'N/A'}
-              </Text>
-            </View>
-            <View style={{ height: 1, backgroundColor: colors.border }} />
-
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Focus Area</Text>
-              <Text style={{ color: '#F87171', fontSize: 14, fontWeight: '800' }}>
-                {content.lowest_dimension ? `${content.lowest_dimension} (${lowestScore ?? 0}%)` : 'N/A'}
-              </Text>
-            </View>
-            <View style={{ height: 1, backgroundColor: colors.border }} />
-
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Exercises Done</Text>
-              <Text style={{ color: colors.text, fontSize: 14, fontWeight: '800' }}>
-                {content.completed_exercises_count ?? 0} {content.exercises_duration_mins ? `(${content.exercises_duration_mins} mins)` : ''}
-              </Text>
-            </View>
-            <View style={{ height: 1, backgroundColor: colors.border }} />
-
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Tips Read</Text>
+              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Wellness Tips Read</Text>
               <Text style={{ color: colors.text, fontSize: 14, fontWeight: '800' }}>
                 {content.tips_read_count ?? 0}
               </Text>
@@ -143,7 +177,7 @@ export const ReportDetailScreen: React.FC = () => {
               <>
                 <View style={{ height: 1, backgroundColor: colors.border }} />
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Academic Tasks Done</Text>
+                  <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Academic Tasks Completed</Text>
                   <Text style={{ color: colors.text, fontSize: 14, fontWeight: '800' }}>
                     {content.tasks_completed_count ?? 0} / {content.tasks_total_count} ({Math.round(((content.tasks_completed_count ?? 0) / content.tasks_total_count) * 100)}%)
                   </Text>
@@ -153,7 +187,7 @@ export const ReportDetailScreen: React.FC = () => {
 
             <View style={{ height: 1, backgroundColor: colors.border }} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Log Streak</Text>
+              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: '500' }}>Check-in Streak</Text>
               <Text style={{ color: colors.text, fontSize: 14, fontWeight: '800' }}>
                 {content.active_streak ?? 0} day(s)
               </Text>
