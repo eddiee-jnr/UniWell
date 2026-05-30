@@ -385,3 +385,9 @@ export const markTipEngagementAsSynced = async (userId: string, tipId: string) =
   if (!db) await initDatabase();
   await db.runAsync('UPDATE tip_engagements SET synced = 1 WHERE user_id = ? AND tip_id = ?;', [userId, tipId]);
 };
+
+export const getLocalTipEngagementsDetail = async (userId: string): Promise<{ tip_id: string; read_at: string }[]> => {
+  if (!db) await initDatabase();
+  const rows = await db.getAllAsync('SELECT tip_id, read_at FROM tip_engagements WHERE user_id = ?;', [userId]);
+  return rows as { tip_id: string; read_at: string }[];
+};
