@@ -69,7 +69,7 @@ export const saveMoodLocally = async (entry: MoodEntry) => {
   if (!db) await initDatabase();
   const syncedVal = entry.synced !== undefined ? entry.synced : 0;
   await db.runAsync(
-    'INSERT INTO mood_logs (id, user_id, mood, stress, note, created_at, synced) VALUES (?, ?, ?, ?, ?, ?, ?);',
+    'INSERT OR IGNORE INTO mood_logs (id, user_id, mood, stress, note, created_at, synced) VALUES (?, ?, ?, ?, ?, ?, ?);',
     [entry.id, entry.user_id, entry.mood, entry.stress, entry.note || '', entry.created_at, syncedVal]
   );
 };
@@ -106,7 +106,7 @@ export const saveCompletedExerciseLocally = async (entry: CompletedExercise) => 
   if (!db) await initDatabase();
   const syncedVal = entry.synced !== undefined ? entry.synced : 0;
   await db.runAsync(
-    'INSERT INTO completed_exercises (id, user_id, exercise_id, exercise_title, category, duration_seconds, completed_at, synced) VALUES (?, ?, ?, ?, ?, ?, ?, ?);',
+    'INSERT OR IGNORE INTO completed_exercises (id, user_id, exercise_id, exercise_title, category, duration_seconds, completed_at, synced) VALUES (?, ?, ?, ?, ?, ?, ?, ?);',
     [entry.id, entry.user_id, entry.exercise_id, entry.exercise_title, entry.category, entry.duration_seconds, entry.completed_at, syncedVal]
   );
 };
@@ -284,7 +284,7 @@ export const saveDimensionRatingsLocally = async (rating: Omit<DimensionRating, 
   if (!db) await initDatabase();
   const syncedVal = rating.synced !== undefined ? rating.synced : 0;
   await db.runAsync(
-    `INSERT INTO dimension_ratings (id, user_id, physical, emotional, social, intellectual, occupational, spiritual, environmental, financial, created_at, synced) 
+    `INSERT OR IGNORE INTO dimension_ratings (id, user_id, physical, emotional, social, intellectual, occupational, spiritual, environmental, financial, created_at, synced) 
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [rating.id, rating.user_id, rating.physical, rating.emotional, rating.social, rating.intellectual, rating.occupational, rating.spiritual, rating.environmental, rating.financial, rating.created_at, syncedVal]
   );
