@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
 import { Session } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthState {
   session: Session | null;
@@ -36,9 +37,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     const profile = session?.user?.user_metadata;
 
     // Immediately update the session and user profile in state.
+    // Start with isRehydrating as false, and let the IIFE check if we need to block.
     set({
       session,
-      isRehydrating: !!session?.user?.id, // only true when a real user is logging in
+      isRehydrating: false,
       rehydrationError: null,
       userProfile: {
         name: profile?.full_name || session?.user?.email?.split('@')[0] || 'Student',
@@ -55,17 +57,38 @@ export const useAuthStore = create<AuthState>((set) => ({
       // synchronous (Zustand requirement) while the async work is tracked.
       (async () => {
         try {
-          const { rehydrateUserData } = await import('../services/syncService');
-          await rehydrateUserData(userId);
-          console.log('[AuthStore] Rehydration complete. Refreshing Zustand stores from SQLite...');
+          const hasRehydratedKey = `has_rehydrated_${userId}`;
+          const alreadyRehydrated = await AsyncStorage.getItem(hasRehydratedKey);
 
-          // Refresh in-memory Zustand store state from the newly written SQLite data.
+          const { rehydrateUserData } = await import('../services/syncService');
           const { useMoodStore } = await import('./moodStore');
           const { useAcademicStore } = await import('./academicStore');
           const { useTipsStore } = await import('./tipsStore');
-          await useMoodStore.getState().loadEntries();
-          await useAcademicStore.getState().loadTasks();
-          await useTipsStore.getState().loadReadTips();
+
+          if (alreadyRehydrated === 'true') {
+            console.log('[AuthStore] Pre-rehydrated. Bypassing rehydration loader screen.');
+            
+            // Perform background rehydration silently to pull fresh updates without blocking UI
+            rehydrateUserData(userId).then(async () => {
+              await useMoodStore.getState().loadEntries();
+              await useAcademicStore.getState().loadTasks();
+              await useTipsStore.getState().loadReadTips();
+              console.log('[AuthStore] Background rehydration complete. Zustand stores updated.');
+            }).catch(err => console.warn('[AuthStore] Background rehydration warning:', err));
+
+          } else {
+            // First time logging in on this device. Block UI to fetch everything.
+            set({ isRehydrating: true });
+            await rehydrateUserData(userId);
+            await AsyncStorage.setItem(hasRehydratedKey, 'true');
+            console.log('[AuthStore] First-time rehydration complete.');
+
+            // Refresh in-memory Zustand store state from the newly written SQLite data.
+            await useMoodStore.getState().loadEntries();
+            await useAcademicStore.getState().loadTasks();
+            await useTipsStore.getState().loadReadTips();
+            set({ isRehydrating: false });
+          }
 
           // Restore read tips from Supabase so the ✓ checkmarks and tips count
           // are correct immediately after login without waiting for the dashboard
@@ -77,16 +100,12 @@ export const useAuthStore = create<AuthState>((set) => ({
               .select('tip_id')
               .eq('user_id', userId);
             if (tipRows && tipRows.length > 0) {
-              const { useTipsStore } = await import('./tipsStore');
               useTipsStore.getState().setReadTips(tipRows.map((r: any) => r.tip_id));
               console.log(`[AuthStore] Restored ${tipRows.length} read tip IDs into tipsStore`);
             }
           } catch (tipErr) {
             console.warn('[AuthStore] Could not restore tips from Supabase:', tipErr);
           }
-
-          set({ isRehydrating: false });
-          console.log('[AuthStore] Stores refreshed. isRehydrating = false.');
 
           // ── Notification Setup on Login/Rehydration ───────────────────────
           (async () => {
@@ -152,14 +171,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signOut: async () => {
     // ── Logout audit ────────────────────────────────────────────────────────
-    // This function ONLY:
-    //   1. Signs out of Supabase Auth (invalidates the JWT token)
-    //   2. Cancels scheduled local notifications for this user session
-    //   3. Clears Zustand in-memory state (session, guest flag)
-    //
-    // It does NOT delete any SQLite table records.
-    // It does NOT clear any Supabase data.
-    // Local data is intentionally preserved so it is available when the user logs back in.
+    const session = get().session;
+    if (session?.user?.id) {
+      await AsyncStorage.removeItem(`has_rehydrated_${session.user.id}`).catch(console.error);
+    }
     await supabase.auth.signOut();
     import('../services/notificationService').then(({ cancelAllNotifications }) => {
       cancelAllNotifications().catch(console.error);

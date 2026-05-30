@@ -25,7 +25,8 @@ export default function App() {
         await useAcademicStore.getState().loadTasks();
         await useTipsStore.getState().loadReadTips();
 
-        await syncPendingEntries();
+        // Run sync and academic calendar seeding in background to prevent blocking startup thread
+        syncPendingEntries().catch(err => console.warn('[App] Background sync error:', err));
 
         const session = useAuthStore.getState().session;
         const profile = session?.user?.user_metadata;
@@ -34,7 +35,7 @@ export default function App() {
           session?.user?.email?.toLowerCase().endsWith('@gimpa.edu.gh');
         
         if (session?.user?.id && isGimpa) {
-          await seedAcademicCalendar(session.user.id, 'gimpa');
+          seedAcademicCalendar(session.user.id, 'gimpa').catch(err => console.warn('[App] Background seed error:', err));
         }
       } catch (err) {
         console.error('App Setup Error:', err);

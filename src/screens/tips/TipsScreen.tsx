@@ -21,10 +21,10 @@ const FILTERS: { label: string; value: FilterCategory }[] = [
 ];
 
 export const TipsScreen: React.FC = () => {
-  const [tips, setTips] = useState<WellnessTip[]>([]);
+  const [tips, setTips] = useState<WellnessTip[]>(localTips as WellnessTip[]);
   const [filter, setFilter] = useState<FilterCategory>('all');
   const readTips = useTipsStore((state) => state.readTips);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   
@@ -56,7 +56,6 @@ export const TipsScreen: React.FC = () => {
       setTips(localTips as WellnessTip[]);
       setIsOffline(true);
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   }, []);

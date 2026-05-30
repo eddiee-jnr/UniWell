@@ -39,7 +39,7 @@ export const useAcademicStore = create<AcademicState>((set, get) => ({
 
   addTask: async (taskData) => {
     const session = useAuthStore.getState().session;
-    const userId = session?.user.id || 'guest';
+    const userId = session?.user?.id || 'guest';
     
     let notificationId: string | undefined = undefined;
     const alertOpt = taskData.alert_trigger || 'none';
@@ -62,14 +62,21 @@ export const useAcademicStore = create<AcademicState>((set, get) => ({
       notification_id: notificationId,
     };
 
-    // Save locally
-    await saveAcademicTaskLocally(newTask);
-    
-    // Update local state
+    // Update local state immediately
     set({ tasks: [...get().tasks, newTask] });
 
-    // Sync
-    await syncPendingEntries();
+    // Background saving & syncing
+    (async () => {
+      try {
+        // Save locally
+        await saveAcademicTaskLocally(newTask);
+        
+        // Sync
+        syncPendingEntries().catch(err => console.warn('[academicStore] Background sync error:', err));
+      } catch (err) {
+        console.error('[academicStore] Failed to save added task:', err);
+      }
+    })();
   },
 
   toggleTask: async (id) => {
@@ -81,28 +88,35 @@ export const useAcademicStore = create<AcademicState>((set, get) => ({
     if (newDone && task.notification_id) {
       try {
         const { cancelNotificationById } = await import('../services/notificationService');
-        await cancelNotificationById(task.notification_id);
+        cancelNotificationById(task.notification_id).catch(console.error);
       } catch (err) {
         console.warn('Failed to cancel notification on complete:', err);
       }
     }
 
-    // Update locally
-    await updateAcademicTaskLocally(id, newDone);
-
-    // If online, update in Supabase
-    const session = useAuthStore.getState().session;
-    if (session && task.user_id !== 'guest') {
-      await supabase.from('academic_tasks').update({ done: newDone }).eq('id', id);
-    }
-
-    // Update local state
+    // Update local state immediately (Optimistic Update)
     set({
       tasks: get().tasks.map((t) => (t.id === id ? { ...t, done: newDone, notification_id: newDone ? undefined : t.notification_id } : t)),
     });
-    
-    // Sync
-    await syncPendingEntries();
+
+    // Run database writes and sync in background
+    (async () => {
+      try {
+        // Update locally
+        await updateAcademicTaskLocally(id, newDone);
+
+        // If online, update in Supabase
+        const session = useAuthStore.getState().session;
+        if (session && task.user_id !== 'guest') {
+          await supabase.from('academic_tasks').update({ done: newDone }).eq('id', id);
+        }
+        
+        // Sync
+        syncPendingEntries().catch(err => console.warn('[academicStore] Background sync error:', err));
+      } catch (err) {
+        console.error('[academicStore] Failed to toggle task:', err);
+      }
+    })();
   },
 
   deleteTask: async (id) => {
@@ -112,19 +126,27 @@ export const useAcademicStore = create<AcademicState>((set, get) => ({
     if (task.notification_id) {
       try {
         const { cancelNotificationById } = await import('../services/notificationService');
-        await cancelNotificationById(task.notification_id);
+        cancelNotificationById(task.notification_id).catch(console.error);
       } catch (err) {
         console.warn('Failed to cancel notification on delete:', err);
       }
     }
 
-    await deleteLocalAcademicTask(id);
-
-    const session = useAuthStore.getState().session;
-    if (session && task.user_id !== 'guest') {
-      await supabase.from('academic_tasks').delete().eq('id', id);
-    }
-
+    // Update local state immediately (Optimistic Deletion)
     set({ tasks: get().tasks.filter((t) => t.id !== id) });
+
+    // Run database writes in background
+    (async () => {
+      try {
+        await deleteLocalAcademicTask(id);
+
+        const session = useAuthStore.getState().session;
+        if (session && task.user_id !== 'guest') {
+          await supabase.from('academic_tasks').delete().eq('id', id);
+        }
+      } catch (err) {
+        console.error('[academicStore] Failed to delete task:', err);
+      }
+    })();
   },
 }));
