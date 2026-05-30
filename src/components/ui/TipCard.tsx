@@ -40,19 +40,22 @@ export const TipCard: React.FC<TipCardProps> = ({ tip, onMarkRead, isRead }) => 
 
       // 3. Sync to Supabase in the background if not a guest
       if (!isGuest && session) {
-        supabase.from('tip_engagements').upsert({
-          user_id: userId,
-          tip_id: tip.id,
-          read_at: readAt,
-        }).then(({ error }) => {
-          if (!error) {
-            markTipEngagementAsSynced(userId, tip.id).catch(console.error);
-          } else {
-            console.warn('[TipCard] Failed to sync tip_engagements to Supabase:', error.message);
+        (async () => {
+          try {
+            const { error } = await supabase.from('tip_engagements').upsert({
+              user_id: userId,
+              tip_id: tip.id,
+              read_at: readAt,
+            });
+            if (!error) {
+              await markTipEngagementAsSynced(userId, tip.id);
+            } else {
+              console.warn('[TipCard] Failed to sync tip_engagements to Supabase:', error.message);
+            }
+          } catch (err) {
+            console.error('[TipCard] Network error syncing tip engagement:', err);
           }
-        }).catch(err => {
-          console.error('[TipCard] Network error syncing tip engagement:', err);
-        });
+        })();
       }
     } catch (err) {
       console.error('Failed to mark tip as read:', err);

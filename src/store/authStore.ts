@@ -171,7 +171,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signOut: async () => {
     // ── Logout audit ────────────────────────────────────────────────────────
-    const session = get().session;
+    const session = useAuthStore.getState().session;
     if (session?.user?.id) {
       await AsyncStorage.removeItem(`has_rehydrated_${session.user.id}`).catch(console.error);
     }
